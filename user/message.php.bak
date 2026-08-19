@@ -1,0 +1,137 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+/*
+ * Token
+ */
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+
+if(!$token){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token缺失'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$data=C::t('app_token')->get_by_token($token);
+
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+$uid=intval($data['uid']);
+
+
+
+/*
+ * 私信列表
+ */
+
+$pms=DB::fetch_all(
+
+"SELECT
+
+ l.plid,
+ l.subject,
+ l.lastmessage,
+ l.dateline,
+
+ m.isnew,
+ m.pmnum
+
+ FROM pre_ucenter_pm_lists l
+
+ INNER JOIN pre_ucenter_pm_members m
+
+ ON l.plid=m.plid
+
+ WHERE m.uid=%d
+
+ ORDER BY l.dateline DESC
+
+ LIMIT 0,50",
+
+array($uid)
+
+);
+
+
+
+$list=array();
+
+
+$unread=0;
+
+
+foreach($pms as $row){
+
+
+    $unread += intval($row['isnew']);
+
+
+    $list[]=array(
+
+        'plid'=>$row['plid'],
+
+        'subject'=>$row['subject'],
+
+        'message'=>$row['lastmessage'],
+
+        'unread'=>$row['isnew'],
+
+        'count'=>$row['pmnum'],
+
+        'dateline'=>$row['dateline']
+
+    );
+
+
+}
+
+
+
+echo json_encode([
+
+'code'=>0,
+
+'data'=>array(
+
+    'unread'=>$unread,
+
+    'count'=>count($list),
+
+    'list'=>$list
+
+)
+
+],JSON_UNESCAPED_UNICODE);
+

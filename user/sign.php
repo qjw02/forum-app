@@ -1,0 +1,282 @@
+<?php
+
+define('IN_API',true);
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+
+C::app()->init();
+
+require_once '/www/wwwroot/qq/wwwroot/api/common/sign.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+// APP签名验证
+
+if(!check_api_sign()){
+
+    echo json_encode([
+        'code'=>403,
+        'message'=>'签名错误'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+// token
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+$data=C::t('app_token')->get_by_token($token);
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+$uid=intval($data['uid']);
+
+
+// 加载签到插件函数
+
+require_once '/www/wwwroot/qq/wwwroot/source/plugin/zqlj_sign/functions.php';
+
+
+// 初始化签到插件
+
+zqlj_sign_init();
+
+
+// 执行签到
+
+$result=zqlj_sign($uid);
+
+
+// 返回结果
+
+switch($result){
+
+    case 2:
+
+        // 读取本次实际签到记录
+        $today=dgmdate(TIMESTAMP,'Ymd');
+
+        $log=DB::fetch_first(
+            "SELECT
+                logid,
+                day,
+                money1,
+                money2,
+                money3,
+                money4,
+                money5,
+                dateline
+             FROM ".DB::table('zqlj_sign_logs')."
+             WHERE uid=%d
+             AND day=%d
+             ORDER BY logid DESC
+             LIMIT 1",
+            array(
+                $uid,
+                $today
+            )
+        );
+
+        // 读取最新签到统计
+        $stats=DB::fetch_first(
+            "SELECT
+                alldays,
+                monthdays,
+                allreward,
+                lastreward,
+                series,
+                lasttime
+             FROM ".DB::table('zqlj_sign_user')."
+             WHERE uid=%d
+             LIMIT 1",
+            array($uid)
+        );
+
+        // 本次实际获得奖励
+        $money1=intval($log['money1'] ?? 0);
+        $money2=intval($log['money2'] ?? 0);
+        $money3=intval($log['money3'] ?? 0);
+        $money4=intval($log['money4'] ?? 0);
+        $money5=intval($log['money5'] ?? 0);
+
+        $reward=$money1+$money2+$money3+$money4+$money5;
+
+        echo json_encode([
+            'code'=>0,
+            'message'=>'签到成功',
+            'data'=>[
+                'uid'=>$uid,
+                'date'=>$today,
+                'reward'=>$reward,
+                'rewards'=>[
+                    'money1'=>$money1,
+                    'money2'=>$money2,
+                    'money3'=>$money3,
+                    'money4'=>$money4,
+                    'money5'=>$money5
+                ],
+                'stats'=>[
+                    'alldays'=>intval($stats['alldays'] ?? 0),
+                    'monthdays'=>intval($stats['monthdays'] ?? 0),
+                    'allreward'=>intval($stats['allreward'] ?? 0),
+                    'series'=>intval($stats['series'] ?? 0),
+                    'lastreward'=>intval($stats['lastreward'] ?? 0)
+                ],
+                'dateline'=>intval($log['dateline'] ?? TIMESTAMP)
+            ]
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+        case 1:
+
+        // 今天已经签到，读取今天的签到记录
+        $today=dgmdate(TIMESTAMP,'Ymd');
+
+        $log=DB::fetch_first(
+            "SELECT
+                logid,
+                day,
+                money1,
+                money2,
+                money3,
+                money4,
+                money5,
+                dateline
+             FROM ".DB::table('zqlj_sign_logs')."
+             WHERE uid=%d
+             AND day=%d
+             ORDER BY logid DESC
+             LIMIT 1",
+            array(
+                $uid,
+                $today
+            )
+        );
+
+        // 读取最新签到统计
+        $stats=DB::fetch_first(
+            "SELECT
+                alldays,
+                monthdays,
+                allreward,
+                lastreward,
+                series,
+                lasttime
+             FROM ".DB::table('zqlj_sign_user')."
+             WHERE uid=%d
+             LIMIT 1",
+            array($uid)
+        );
+
+        $money1=intval($log['money1'] ?? 0);
+        $money2=intval($log['money2'] ?? 0);
+        $money3=intval($log['money3'] ?? 0);
+        $money4=intval($log['money4'] ?? 0);
+        $money5=intval($log['money5'] ?? 0);
+
+        $reward=$money1+$money2+$money3+$money4+$money5;
+
+        echo json_encode([
+            'code'=>409,
+            'message'=>'今天已经签到',
+            'data'=>[
+                'uid'=>$uid,
+                'date'=>$today,
+                'signed'=>true,
+                'reward'=>$reward,
+                'rewards'=>[
+                    'money1'=>$money1,
+                    'money2'=>$money2,
+                    'money3'=>$money3,
+                    'money4'=>$money4,
+                    'money5'=>$money5
+                ],
+                'stats'=>[
+                    'alldays'=>intval($stats['alldays'] ?? 0),
+                    'monthdays'=>intval($stats['monthdays'] ?? 0),
+                    'allreward'=>intval($stats['allreward'] ?? 0),
+                    'series'=>intval($stats['series'] ?? 0),
+                    'lastreward'=>intval($stats['lastreward'] ?? 0)
+                ],
+                'dateline'=>intval($log['dateline'] ?? 0)
+            ]
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+        case -100:
+
+        echo json_encode([
+            'code'=>400,
+            'message'=>'UID无效'
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+
+    case -101:
+
+        echo json_encode([
+            'code'=>404,
+            'message'=>'用户不存在'
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+
+    case -102:
+
+        echo json_encode([
+            'code'=>403,
+            'message'=>'当前不在签到开放时间'
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+
+    case -103:
+
+        echo json_encode([
+            'code'=>403,
+            'message'=>'当前用户组不允许签到'
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+
+    case -104:
+
+        echo json_encode([
+            'code'=>409,
+            'message'=>'签到正在处理中，请稍后再试'
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+
+    default:
+
+        echo json_encode([
+            'code'=>500,
+            'message'=>'签到失败',
+            'result'=>$result
+        ],JSON_UNESCAPED_UNICODE);
+
+        break;
+
+}

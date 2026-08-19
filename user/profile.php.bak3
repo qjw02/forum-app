@@ -1,0 +1,149 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+
+
+if(!$token){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token缺失'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$data=C::t('app_token')->get_by_token($token);
+
+
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$uid=intval($data['uid']);
+
+
+
+$user=DB::fetch_first(
+
+"SELECT
+ uid,
+ username,
+ credits,
+ regdate
+
+ FROM pre_common_member
+
+ WHERE uid=%d",
+
+array($uid)
+
+);
+
+
+
+if(!$user){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'用户不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+/*
+ * 主题数量
+ */
+
+$threads=DB::result_first(
+
+"SELECT COUNT(*)
+
+ FROM pre_forum_thread
+
+ WHERE authorid=%d",
+
+array($uid)
+
+);
+
+
+
+/*
+ * 回复数量
+ */
+
+$posts=DB::result_first(
+
+"SELECT COUNT(*)
+
+ FROM pre_forum_post
+
+ WHERE authorid=%d
+
+ AND first=0",
+
+array($uid)
+
+);
+
+
+
+echo json_encode([
+
+'code'=>0,
+
+'data'=>array(
+
+    'uid'=>$user['uid'],
+
+    'username'=>$user['username'],
+
+    'avatar'=>
+    'https://a3x9r3.cdlf3.com/uc_server/avatar.php?uid='
+    .$uid
+    .'&size=middle',
+
+    'credits'=>$user['credits'],
+
+    'regdate'=>$user['regdate'],
+
+    'threads'=>intval($threads),
+
+    'posts'=>intval($posts)
+
+)
+
+],JSON_UNESCAPED_UNICODE);
+

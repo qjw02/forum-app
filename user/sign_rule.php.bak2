@@ -1,0 +1,76 @@
+<?php
+
+define('IN_API',true);
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+
+C::app()->init();
+
+require_once '/www/wwwroot/qq/wwwroot/api/common/sign.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+// APP签名验证
+if(!check_api_sign()){
+
+    echo json_encode([
+        'code'=>403,
+        'message'=>'签名错误'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+
+// token
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+$data=C::t('app_token')->get_by_token($token);
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+
+// 加载签到插件
+require_once '/www/wwwroot/qq/wwwroot/source/plugin/zqlj_sign/functions.php';
+
+
+// 初始化
+zqlj_sign_init();
+
+
+// 返回规则
+echo json_encode([
+    'code'=>0,
+    'data'=>[
+        'creditid'=>$_sign_init['creditid'] ?? 0,
+        'creditname'=>$_sign_init['creditname'] ?? '',
+
+        'base_reward'=>$_sign_init['money1'] ?? 0,
+
+        'daily_rank_reward'=>$_sign_init['money2'] ?? [],
+
+        'series_reward'=>$_sign_init['money3'] ?? [],
+
+        'group_reward'=>[
+            'groups'=>$_sign_init['groups4'] ?? [],
+            'reward'=>$_sign_init['money4'] ?? 0
+        ],
+
+        'special_day_reward'=>$_sign_init['money5'] ?? 0,
+
+        'grade_list'=>$_sign_init['gradelist'] ?? [],
+
+        'notice'=>$_sign_init['notice'] ?? '',
+
+        'rule'=>$_sign_init['rule'] ?? ''
+    ]
+],JSON_UNESCAPED_UNICODE);
