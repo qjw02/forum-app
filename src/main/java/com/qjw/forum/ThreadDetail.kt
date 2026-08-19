@@ -1,0 +1,734 @@
+package com.qjw.forum
+
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.qjw.forum.component.ImageViewer
+import kotlinx.coroutines.launch
+
+
+fun cleanDiscuzText(text:String):String{
+
+    return text
+
+        .replace(
+            Regex("<style.*?</style>",
+                RegexOption.DOT_MATCHES_ALL),
+            ""
+        )
+
+        .replace(
+            Regex("<script.*?</script>",
+                RegexOption.DOT_MATCHES_ALL),
+            ""
+        )
+
+        .replace(
+            Regex("<img.*?>",
+                RegexOption.DOT_MATCHES_ALL),
+            ""
+        )
+
+        .replace(
+            Regex("<a.*?</a>",
+                RegexOption.DOT_MATCHES_ALL),
+            ""
+        )
+
+        .replace(
+            Regex("<div.*?>",
+                RegexOption.DOT_MATCHES_ALL),
+            ""
+        )
+
+        .replace("</div>","")
+
+        .replace("<br />","\n")
+        .replace("<br/>","\n")
+        .replace("<br>","\n")
+
+        .replace("&nbsp;"," ")
+
+        .replace(
+            Regex("\\[attach\\].*?\\[/attach\\]"),
+            ""
+        )
+
+        .replace(
+            Regex("\\[img\\].*?\\[/img\\]"),
+            ""
+        )
+
+        .trim()
+
+}
+
+
+
+
+@Composable
+fun ThreadDetail(
+
+    tid:String,
+
+    onBack:()->Unit,
+
+    onLogin:()->Unit
+
+){
+
+
+    android.util.Log.e(
+        "THREAD_DEBUG",
+        "ThreadDetail进入 tid=$tid"
+    )
+
+
+
+    var data by remember {
+
+        mutableStateOf<ThreadData?>(null)
+
+    }
+
+
+
+    var loading by remember {
+
+        mutableStateOf(true)
+
+    }
+
+
+
+    var replyText by remember {
+
+        mutableStateOf("")
+
+    }
+
+
+
+    var replyMsg by remember {
+
+        mutableStateOf("")
+
+    }
+
+
+
+    val scope =
+        rememberCoroutineScope()
+
+
+
+
+
+    fun loadThread(){
+
+
+        scope.launch{
+
+
+            try{
+
+
+                android.util.Log.e(
+                    "THREAD_DEBUG",
+                    "开始请求帖子 tid=$tid"
+                )
+
+
+
+                val result =
+
+                    ApiClient.api.getThread(tid)
+
+
+
+
+                android.util.Log.e(
+                    "THREAD_DEBUG",
+                    result.toString()
+                )
+
+
+
+
+                if(result.code==0){
+
+                    data =
+                        result.data
+
+                }else{
+
+                    replyMsg =
+                        result.message ?: "加载失败"
+
+                }
+
+
+
+            }catch(e:Exception){
+
+
+                android.util.Log.e(
+                    "THREAD_ERROR",
+                    e.stackTraceToString()
+                )
+
+
+                replyMsg =
+                    e.message ?: "加载失败"
+
+
+            }
+
+
+
+            loading=false
+
+
+
+        }
+
+
+    }
+
+
+
+
+
+    LaunchedEffect(tid){
+
+        loadThread()
+
+    }
+
+
+
+
+    Box(
+
+        modifier =
+            Modifier.fillMaxSize()
+
+    ){
+
+
+
+        Column(
+
+            modifier =
+                Modifier.fillMaxSize()
+
+        ){
+
+
+
+            Button(
+
+                modifier =
+                    Modifier.padding(10.dp),
+
+                onClick = {
+
+                    onBack()
+
+                }
+
+            ){
+
+                Text("返回")
+
+            }
+
+
+
+
+
+
+
+            if(loading){
+
+
+                Box(
+
+                    modifier =
+                        Modifier.fillMaxSize(),
+
+                    contentAlignment =
+                        Alignment.Center
+
+                ){
+
+                    Text("加载中...")
+
+                }
+
+
+            }else{
+
+
+
+
+
+                data?.let { threadData ->
+
+
+
+
+                    LazyColumn(
+
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 12.dp)
+                                .widthIn(max = 600.dp)
+
+                    ){
+
+
+
+                        item{
+
+
+
+                            Text(
+
+                                text =
+                                    threadData.thread.subject,
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleLarge
+
+                            )
+
+
+
+                            Spacer(
+                                Modifier.height(10.dp)
+                            )
+
+
+
+                            Text(
+                                "作者:${threadData.thread.author.username}"
+                            )
+
+
+
+                            Spacer(
+                                Modifier.height(10.dp)
+                            )
+
+
+
+                            Text(
+
+                                cleanDiscuzText(
+                                    threadData.thread.content
+                                )
+
+                            )
+
+
+
+                            Spacer(
+                                Modifier.height(15.dp)
+                            )
+
+
+
+
+                            threadData.thread.images.forEach { img ->
+
+
+                                Box(
+
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+
+                                ){
+
+                                    ImageViewer(
+
+                                        url = img
+
+                                    )
+
+                                }
+
+
+                                Spacer(
+                                    Modifier.height(10.dp)
+                                )
+
+
+                            }
+
+
+
+
+
+                            Spacer(
+                                Modifier.height(20.dp)
+                            )
+
+
+
+
+
+    
+                        // ===============================
+                        // 联系方式购买
+                        // ===============================
+
+                        threadData.contact?.let { contact ->
+
+                            Spacer(
+                                Modifier.height(15.dp)
+                            )
+
+                            Text(
+                                text = "联系方式",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            Spacer(
+                                Modifier.height(8.dp)
+                            )
+
+                            if(contact.locked){
+
+                                Text(
+                                    text = "🔒 联系方式已隐藏"
+                                )
+
+                                Text(
+                                    text = "需要 ${contact.price ?: 0} C币查看"
+                                )
+
+                                Spacer(
+                                    Modifier.height(8.dp)
+                                )
+
+                                Button(
+                                    onClick = {
+
+                                        if(!UserStore.isLogin()){
+
+                                            onLogin()
+
+                                            return@Button
+
+                                        }
+
+                                        scope.launch {
+
+                                            try {
+
+                                                val result =
+                                                    ApiClient.api.buyField(
+                                                        UserStore.getToken(),
+                                                        tid,
+                                                        contact.optionid ?: 7
+                                                    )
+
+                                                replyMsg =
+                                                    result.message ?: ""
+
+                                                if(result.code == 0){
+
+                                                    loadThread()
+
+                                                }
+
+                                            }catch(e:Exception){
+
+                                                replyMsg =
+                                                    e.message ?: "购买失败"
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                ){
+
+                                    Text("购买查看")
+
+                                }
+
+
+                            }else{
+
+                                Text(
+                                    cleanDiscuzText(
+                                        contact.value ?: ""
+                                    )
+                                )
+
+                            }
+
+                            Spacer(
+                                Modifier.height(15.dp)
+                            )
+
+                        }
+
+                        Text(
+
+                                text =
+                                    "回复(${threadData.replies.total})",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium
+
+                            )
+
+
+
+
+
+                            Spacer(
+                                Modifier.height(10.dp)
+                            )
+
+
+
+
+
+                            OutlinedTextField(
+
+                                value =
+                                    replyText,
+
+                                onValueChange = {
+
+                                    replyText = it
+
+                                },
+
+                                label = {
+
+                                    Text("输入回复")
+
+                                },
+
+                                modifier =
+                                    Modifier.fillMaxWidth()
+
+                            )
+
+
+
+
+
+
+                            Spacer(
+                                Modifier.height(10.dp)
+                            )
+
+
+
+
+
+                            Button(
+
+                                onClick = {
+
+
+                                    if(!UserStore.isLogin()){
+
+                                        onLogin()
+
+                                        return@Button
+
+                                    }
+
+
+
+                                    scope.launch{
+
+
+                                        try{
+
+
+                                            val result =
+
+                                                ApiClient.api.reply(
+
+                                                    tid,
+
+                                                    replyText
+
+                                                )
+
+
+
+                                            replyMsg =
+
+                                                result.message
+                                                    ?: ""
+
+
+
+                                            if(result.code==0){
+
+
+                                                replyText=""
+
+
+                                                PostCache.clear()
+
+
+                                                val refresh =
+
+                                                    ApiClient.api.getThread(
+                                                        tid
+                                                    )
+
+
+
+                                                if(refresh.code==0){
+
+                                                    data =
+                                                        refresh.data
+
+                                                }
+
+
+                                            }
+
+
+
+                                        }catch(e:Exception){
+
+
+                                            replyMsg =
+                                                e.message
+                                                    ?: "回复失败"
+
+                                        }
+
+
+                                    }
+
+
+
+                                }
+
+                            ){
+
+                                Text("发送回复")
+
+                            }
+
+
+
+
+
+                            Spacer(
+                                Modifier.height(10.dp)
+                            )
+
+
+
+                            Text(replyMsg)
+
+
+
+                        }
+
+
+
+
+
+
+
+                        items(
+                            threadData.replies.list
+                        ){ reply ->
+
+
+
+
+                            Card(
+
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 6.dp)
+
+                            ){
+
+
+                                Column(
+
+                                    modifier =
+                                        Modifier.padding(10.dp)
+
+                                ){
+
+
+                                    Text(
+                                        reply.author.username
+                                    )
+
+
+
+                                    Text(
+
+                                        cleanDiscuzText(
+                                            reply.message
+                                        )
+
+                                    )
+
+
+                                }
+
+
+                            }
+
+
+
+                        }
+
+
+
+                    }
+
+
+
+                }
+
+
+
+            }
+
+
+
+        }
+
+
+
+    }
+
+
+
+}
