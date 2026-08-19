@@ -1,0 +1,243 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_forum.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+function parse_images($message){
+
+    $images=array();
+
+    preg_match_all(
+        '/\[img\](.*?)\[\/img\]/i',
+        $message,
+        $match
+    );
+
+
+    if(!empty($match[1])){
+
+        foreach($match[1] as $img){
+
+            $images[]=$img;
+
+        }
+
+    }
+
+    return $images;
+
+}
+
+
+
+function avatar_url($uid){
+
+    return 
+    'https://a3x9r3.cdlf3.com/uc_server/avatar.php?uid='
+    .$uid
+    .'&size=middle';
+
+}
+
+
+
+/*
+ Token
+*/
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+
+if(!$token){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token缺失'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$data=C::t('app_token')->get_by_token($token);
+
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$member=getuserbyuid($data['uid'],1);
+
+
+if(!$member){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'用户不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$tid=intval($_POST['tid'] ?? 0);
+
+$message=trim($_POST['message'] ?? '');
+
+$image=trim($_POST['image'] ?? '');
+
+
+
+if($image){
+
+    $message .= "\n\n[img]".$image."[/img]";
+
+}
+
+
+
+if(!$tid || !$message){
+
+    echo json_encode([
+        'code'=>400,
+        'message'=>'参数错误'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$thread=DB::fetch_first(
+
+"SELECT
+ fid
+ FROM pre_forum_thread
+ WHERE tid=%d",
+
+array($tid)
+
+);
+
+
+
+if(!$thread){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'帖子不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$post=array(
+
+'fid'=>$thread['fid'],
+
+'tid'=>$tid,
+
+'first'=>0,
+
+'author'=>$member['username'],
+
+'authorid'=>$member['uid'],
+
+'subject'=>'',
+
+'dateline'=>TIMESTAMP,
+
+'message'=>$message,
+
+'useip'=>$_SERVER['REMOTE_ADDR'],
+
+'invisible'=>0,
+
+'anonymous'=>0
+
+);
+
+
+
+$pid=insertpost($post);
+
+
+
+DB::query(
+
+"UPDATE pre_forum_thread
+
+ SET replies=replies+1,
+ lastpost=%d,
+ lastposter=%s
+
+ WHERE tid=%d",
+
+array(
+
+TIMESTAMP,
+
+$member['username'],
+
+$tid
+
+)
+
+);
+
+
+
+echo json_encode([
+
+'code'=>0,
+
+'message'=>'回复成功',
+
+'data'=>array(
+
+    'pid'=>$pid,
+
+    'tid'=>$tid,
+
+    'author'=>$member['username'],
+
+    'avatar'=>avatar_url($member['uid']),
+
+    'message'=>$message,
+
+    'images'=>parse_images($message),
+
+    'dateline'=>TIMESTAMP
+
+)
+
+],JSON_UNESCAPED_UNICODE);

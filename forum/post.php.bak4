@@ -1,0 +1,289 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_forum.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+/*
+ * token
+ */
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+
+if(!$token){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token缺失'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$data=C::t('app_token')->get_by_token($token);
+
+
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$uid=intval($data['uid']);
+
+
+
+/*
+ * 参数
+ */
+
+
+$fid=intval($_POST['fid'] ?? 0);
+
+$subject=trim($_POST['subject'] ?? '');
+
+$message=trim($_POST['message'] ?? '');
+
+
+
+
+if(!$fid || !$subject || !$message){
+
+    echo json_encode([
+        'code'=>400,
+        'message'=>'参数不完整'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+
+/*
+ * 检查版块
+ */
+
+
+$forum=DB::fetch_first(
+
+"SELECT fid,name
+ FROM pre_forum_forum
+ WHERE fid=%d
+ AND type='forum'",
+
+array($fid)
+
+);
+
+
+
+if(!$forum){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'版块不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+
+/*
+ * 用户
+ */
+
+$member=getuserbyuid($uid,1);
+
+
+
+
+if(!$member){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'用户不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+/*
+ * 创建tid
+ */
+
+
+$thread=array(
+
+'fid'=>$fid,
+
+'posttableid'=>0,
+
+'author'=>$member['username'],
+
+'authorid'=>$uid,
+
+'subject'=>$subject,
+
+'dateline'=>TIMESTAMP,
+
+'lastpost'=>TIMESTAMP,
+
+'lastposter'=>$member['username'],
+
+'views'=>0,
+
+'replies'=>0,
+
+'digest'=>0,
+
+'displayorder'=>0
+
+);
+
+
+
+$tid=DB::insert(
+'forum_thread',
+$thread,
+true
+);
+
+
+
+if(!$tid){
+
+    echo json_encode([
+        'code'=>500,
+        'message'=>'创建主题失败'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+
+/*
+ * 创建首帖
+ */
+
+
+$post=array(
+
+'pid'=>$pid,
+
+  'tid'=>$tid,
+
+'fid'=>$fid,
+
+'first'=>1,
+
+'author'=>$member['username'],
+
+'authorid'=>$uid,
+
+'subject'=>$subject,
+
+'dateline'=>TIMESTAMP,
+
+'message'=>$message,
+
+'useip'=>$_SERVER['REMOTE_ADDR']
+
+);
+
+
+
+$pid=DB::insert(
+
+'forum_post',
+
+$post,
+
+true
+
+);
+
+
+
+
+if(!$pid){
+
+    echo json_encode([
+        'code'=>500,
+        'message'=>'创建帖子失败'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+
+/*
+ * 更新主题
+ */
+
+
+DB::query(
+
+"UPDATE pre_forum_thread
+ SET attachment=0
+ WHERE tid=%d",
+
+array($tid)
+
+);
+
+
+
+echo json_encode([
+
+'code'=>0,
+
+'message'=>'发布成功',
+
+'data'=>array(
+
+'tid'=>$tid,
+
+'pid'=>$pid,
+
+'fid'=>$fid
+
+)
+
+],JSON_UNESCAPED_UNICODE);

@@ -1,0 +1,381 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_forum.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+function avatar_url($uid){
+
+    return 
+    'https://a3x9r3.cdlf3.com/uc_server/avatar.php?uid='
+    .$uid
+    .'&size=middle';
+
+}
+
+
+
+function parse_images($message){
+
+    $images=array();
+
+
+    preg_match_all(
+        '/\[img\](.*?)\[\/img\]/i',
+        $message,
+        $match
+    );
+
+
+    if(!empty($match[1])){
+
+        foreach($match[1] as $img){
+
+            if(strpos($img,'http')!==0){
+
+                $img='https://a3x9r3.cdlf3.com'.$img;
+
+            }
+
+
+            $images[]=$img;
+
+        }
+
+    }
+
+
+    return $images;
+
+}
+
+
+
+
+$tid=intval($_GET['tid'] ?? 0);
+
+
+
+$page=intval($_GET['page'] ?? 1);
+
+
+$page_size=intval($_GET['page_size'] ?? 20);
+
+
+
+if($page<1){
+
+    $page=1;
+
+}
+
+
+if($page_size<1){
+
+    $page_size=20;
+
+}
+
+
+if($page_size>50){
+
+    $page_size=50;
+
+}
+
+
+
+$start=($page-1)*$page_size;
+
+
+
+if(!$tid){
+
+    echo json_encode([
+        'code'=>400,
+        'message'=>'tid不能为空'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+
+/*
+ * 增加浏览量
+ */
+
+DB::query(
+
+"UPDATE pre_forum_thread
+
+ SET views=views+1
+
+ WHERE tid=%d",
+
+array($tid)
+
+);
+
+
+
+
+
+/*
+ * 主题
+ */
+
+
+$thread=DB::fetch_first(
+
+"SELECT
+
+tid,
+fid,
+author,
+authorid,
+subject,
+views,
+replies,
+dateline
+
+
+FROM pre_forum_thread
+
+
+WHERE tid=%d",
+
+array($tid)
+
+);
+
+
+
+if(!$thread){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'帖子不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+
+
+/*
+ * 首帖内容
+ */
+
+
+$first=DB::fetch_first(
+
+"SELECT message
+
+ FROM pre_forum_post
+
+ WHERE tid=%d
+
+ AND first=1",
+
+array($tid)
+
+);
+
+
+
+
+
+/*
+ * 回复数量
+ */
+
+$total=DB::result_first(
+
+"SELECT COUNT(*)
+
+FROM pre_forum_post
+
+WHERE tid=%d
+
+AND first=0",
+
+array($tid)
+
+);
+
+
+
+
+
+
+
+/*
+ * 回复
+ */
+
+
+$posts=DB::fetch_all(
+
+"SELECT
+
+
+pid,
+author,
+authorid,
+message,
+dateline
+
+
+FROM pre_forum_post
+
+
+WHERE tid=%d
+
+AND first=0
+
+
+ORDER BY dateline ASC
+
+
+LIMIT %d,%d",
+
+array(
+
+$tid,
+
+$start,
+
+$page_size
+
+)
+
+);
+
+
+
+
+
+$reply_list=array();
+
+
+
+foreach($posts as $row){
+
+
+    $reply_list[]=array(
+
+        'pid'=>$row['pid'],
+
+        'author'=>array(
+
+            'uid'=>$row['authorid'],
+
+            'username'=>$row['author'],
+
+            'avatar'=>avatar_url($row['authorid'])
+
+        ),
+
+
+        'message'=>$row['message'],
+
+
+        'images'=>parse_images($row['message']),
+
+
+        'dateline'=>$row['dateline']
+
+    );
+
+
+}
+
+
+
+
+
+
+
+echo json_encode([
+
+
+'code'=>0,
+
+
+'data'=>array(
+
+
+'thread'=>array(
+
+    'tid'=>$thread['tid'],
+
+    'fid'=>$thread['fid'],
+
+    'subject'=>$thread['subject'],
+
+
+    'author'=>array(
+
+        'uid'=>$thread['authorid'],
+
+        'username'=>$thread['author'],
+
+        'avatar'=>avatar_url($thread['authorid'])
+
+    ),
+
+
+    'views'=>$thread['views']+1,
+
+
+    'replies'=>$thread['replies'],
+
+
+    'dateline'=>$thread['dateline'],
+
+
+
+    'content'=>$first['message'] ?? '',
+
+
+    'images'=>parse_images($first['message'] ?? '')
+
+),
+
+
+
+'replies'=>array(
+
+    'page'=>$page,
+
+    'page_size'=>$page_size,
+
+    'total'=>intval($total),
+
+    'list'=>$reply_list
+
+)
+
+
+)
+
+
+],JSON_UNESCAPED_UNICODE);
+

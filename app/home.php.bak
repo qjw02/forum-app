@@ -1,0 +1,384 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+function avatar_url($uid){
+
+    return 
+    'https://a3x9r3.cdlf3.com/uc_server/avatar.php?uid='
+    .$uid
+    .'&size=middle';
+
+}
+
+
+
+function parse_image($message){
+
+    if(!$message){
+        return '';
+    }
+
+
+    preg_match(
+        '/\[img\](.*?)\[\/img\]/i',
+        $message,
+        $match
+    );
+
+
+    if(isset($match[1])){
+
+        $img=$match[1];
+
+
+        if(strpos($img,'http')===0){
+
+            return $img;
+
+        }else{
+
+            return 
+            'https://a3x9r3.cdlf3.com'.$img;
+
+        }
+
+    }
+
+
+    return '';
+
+}
+
+
+
+
+function format_thread($row){
+
+
+    return array(
+
+        'tid'=>$row['tid'],
+
+        'fid'=>$row['fid'],
+
+        'forum'=>$row['forumname'] ?? '',
+
+
+        'title'=>$row['subject'],
+
+
+        'cover'=>parse_image(
+            $row['message'] ?? ''
+        ),
+
+
+        'author'=>array(
+
+            'uid'=>$row['authorid'],
+
+            'username'=>$row['author'],
+
+            'avatar'=>avatar_url(
+                $row['authorid']
+            )
+
+        ),
+
+
+        'views'=>intval($row['views']),
+
+
+        'replies'=>intval($row['replies']),
+
+
+        'dateline'=>$row['dateline'],
+
+
+        'lastpost'=>$row['lastpost']
+
+    );
+
+}
+
+
+
+
+
+/*
+ 用户
+*/
+
+
+$user=array();
+
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+
+
+if($token){
+
+
+    $token_data=C::t('app_token')
+    ->get_by_token($token);
+
+
+
+    if($token_data && $token_data['expire']>TIMESTAMP){
+
+
+        $uid=intval($token_data['uid']);
+
+
+        $member=getuserbyuid($uid,1);
+
+
+
+        if($member){
+
+
+            $today=date('Y-m-d');
+
+
+            $signed=DB::fetch_first(
+
+            "SELECT id 
+             FROM pre_app_sign
+             WHERE uid=%d
+             AND sign_date=%s",
+
+             array(
+                $uid,
+                $today
+             )
+
+            );
+
+
+            $user=array(
+
+                'uid'=>$uid,
+
+                'username'=>$member['username'],
+
+                'avatar'=>avatar_url($uid),
+
+                'credits'=>intval($member['credits']),
+
+                'signed'=>$signed ? true:false
+
+            );
+
+
+        }
+
+
+    }
+
+}
+
+
+
+
+/*
+ 推荐
+*/
+
+
+$recommend=array();
+
+
+if(C::t('app_recommend')){
+
+
+    $rows=C::t('app_recommend')
+    ->get_list(0,5);
+
+
+
+    foreach($rows as $r){
+
+
+        $recommend[]=array(
+
+            'id'=>$r['id'],
+
+            'tid'=>$r['tid'],
+
+            'title'=>$r['title'],
+
+            'cover'=>$r['cover'],
+
+            'description'=>$r['description']
+
+        );
+
+
+    }
+
+
+}
+
+
+
+
+/*
+ 最新帖子
+*/
+
+
+$new=DB::fetch_all(
+
+"SELECT
+
+t.tid,
+t.fid,
+t.subject,
+t.author,
+t.authorid,
+t.views,
+t.replies,
+t.dateline,
+t.lastpost,
+
+f.name forumname,
+
+p.message
+
+
+FROM pre_forum_thread t
+
+
+LEFT JOIN pre_forum_forum f
+
+ON t.fid=f.fid
+
+
+LEFT JOIN pre_forum_post p
+
+ON t.tid=p.tid
+
+AND p.first=1
+
+
+WHERE t.displayorder>=0
+
+
+ORDER BY t.dateline DESC
+
+
+LIMIT 0,10"
+
+);
+
+
+
+$latest=array();
+
+
+foreach($new as $row){
+
+    $latest[]=format_thread($row);
+
+}
+
+
+
+
+/*
+ 热门帖子
+*/
+
+
+$hot=DB::fetch_all(
+
+"SELECT
+
+t.tid,
+t.fid,
+t.subject,
+t.author,
+t.authorid,
+t.views,
+t.replies,
+t.dateline,
+t.lastpost,
+
+f.name forumname,
+
+p.message
+
+
+FROM pre_forum_thread t
+
+
+LEFT JOIN pre_forum_forum f
+
+ON t.fid=f.fid
+
+
+LEFT JOIN pre_forum_post p
+
+ON t.tid=p.tid
+
+AND p.first=1
+
+
+WHERE t.displayorder>=0
+
+
+ORDER BY t.replies DESC
+
+
+LIMIT 0,10"
+
+);
+
+
+
+$hot_list=array();
+
+
+foreach($hot as $row){
+
+    $hot_list[]=format_thread($row);
+
+}
+
+
+
+
+echo json_encode([
+
+
+'code'=>0,
+
+
+'data'=>array(
+
+    'user'=>$user,
+
+    'recommend'=>$recommend,
+
+    'latest'=>$latest,
+
+    'hot'=>$hot_list
+
+)
+
+
+],JSON_UNESCAPED_UNICODE);
+

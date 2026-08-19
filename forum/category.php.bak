@@ -1,0 +1,106 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+
+/*
+ * 获取版块列表
+ *
+ * 排除分类，只显示可发帖版块
+ */
+
+
+
+$forums=DB::fetch_all(
+
+"SELECT
+
+ f.fid,
+ f.name,
+ f.fup,
+ f.type,
+
+ COUNT(t.tid) threads
+
+
+FROM pre_forum_forum f
+
+
+LEFT JOIN pre_forum_thread t
+
+ON f.fid=t.fid
+
+AND t.displayorder>=0
+
+
+WHERE f.status=1
+
+
+GROUP BY f.fid
+
+
+ORDER BY f.displayorder ASC,f.fid ASC"
+
+);
+
+
+
+
+$list=array();
+
+
+
+foreach($forums as $row){
+
+
+    // 只返回普通版块
+
+    if($row['type']!='forum'){
+
+        continue;
+
+    }
+
+
+
+    $list[]=array(
+
+        'fid'=>$row['fid'],
+
+        'name'=>$row['name'],
+
+        'threads'=>intval($row['threads'])
+
+    );
+
+
+}
+
+
+
+
+echo json_encode([
+
+
+    'code'=>0,
+
+
+    'data'=>array(
+
+        'list'=>$list
+
+    )
+
+
+],JSON_UNESCAPED_UNICODE);
+

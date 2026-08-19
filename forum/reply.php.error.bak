@@ -1,0 +1,220 @@
+<?php
+
+define('IN_API',true);
+
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_forum.php';
+
+
+C::app()->init();
+
+
+header('Content-Type: application/json; charset=utf-8');
+
+require_once '/www/wwwroot/qq/wwwroot/api/common/sign.php';
+
+    echo json_encode(['code'=>403,'message'=>'签名错误'],JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+
+
+
+/*
+ * token
+ */
+
+$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
+
+
+if(!$token){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token缺失'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$data=C::t('app_token')->get_by_token($token);
+
+
+
+if(!$data || $data['expire'] < TIMESTAMP){
+
+    echo json_encode([
+        'code'=>401,
+        'message'=>'token无效'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+$uid=intval($data['uid']);
+
+
+
+$user=getuserbyuid($uid,1);
+
+
+
+$tid=intval($_POST['tid'] ?? 0);
+
+$message=trim($_POST['message'] ?? '');
+
+
+
+if(!$tid){
+
+    echo json_encode([
+        'code'=>400,
+        'message'=>'tid不能为空'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+if(!$message){
+
+    echo json_encode([
+        'code'=>400,
+        'message'=>'回复内容不能为空'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+/*
+ * 检查主题
+ */
+
+$thread=DB::fetch_first(
+
+"SELECT tid,fid,subject,replies
+ FROM pre_forum_thread
+ WHERE tid=%d",
+
+array($tid)
+
+);
+
+
+
+if(!$thread){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'帖子不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+/*
+ * 获取下一个pid
+ */
+
+$pid=DB::result_first(
+"SELECT MAX(pid)+1
+ FROM pre_forum_post"
+);
+
+
+
+if(!$pid){
+
+    $pid=1;
+
+}
+
+
+
+/*
+ * 插入回复
+ */
+
+DB::insert(
+'forum_post',
+array(
+
+    'pid'=>$pid,
+
+    'tid'=>$tid,
+
+    'fid'=>$thread['fid'],
+
+    'first'=>0,
+
+    'author'=>$user['username'],
+
+    'authorid'=>$uid,
+
+    'subject'=>'',
+
+    'dateline'=>TIMESTAMP,
+
+    'message'=>$message,
+
+    'useip'=>$_SERVER['REMOTE_ADDR']
+
+)
+);
+
+
+
+/*
+ * 更新回复数
+ */
+
+DB::query(
+
+"UPDATE pre_forum_thread
+ SET replies=replies+1
+ WHERE tid=%d",
+
+array($tid)
+
+);
+
+
+
+echo json_encode([
+
+'code'=>0,
+
+'message'=>'回复成功',
+
+'data'=>array(
+
+    'pid'=>$pid,
+
+    'tid'=>$tid,
+
+    'author'=>$user['username'],
+
+    'message'=>$message,
+
+    'dateline'=>TIMESTAMP
+
+)
+
+],JSON_UNESCAPED_UNICODE);
+

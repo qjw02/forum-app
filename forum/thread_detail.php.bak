@@ -1,0 +1,241 @@
+<?php
+
+define('IN_API',true);
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+
+C::app()->init();
+
+header('Content-Type: application/json; charset=utf-8');
+
+
+$tid=intval($_GET['tid'] ?? 0);
+
+
+if(!$tid){
+
+    echo json_encode([
+        'code'=>400,
+        'message'=>'tid不能为空'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+/*
+主题
+*/
+
+$thread=DB::fetch_first(
+
+"SELECT
+tid,
+fid,
+author,
+authorid,
+subject,
+views,
+replies,
+dateline,
+lastpost,
+lastposter
+
+FROM %t
+
+WHERE tid=%d",
+
+array(
+'forum_thread',
+$tid
+)
+
+);
+
+
+if(!$thread){
+
+    echo json_encode([
+        'code'=>404,
+        'message'=>'主题不存在'
+    ],JSON_UNESCAPED_UNICODE);
+
+    exit;
+
+}
+
+
+
+/*
+首帖
+*/
+
+$post=DB::fetch_first(
+
+"SELECT
+
+pid,
+author,
+authorid,
+message,
+dateline
+
+FROM %t
+
+WHERE tid=%d
+AND first=1",
+
+array(
+'forum_post',
+$tid
+)
+
+);
+
+
+
+/*
+图片
+*/
+
+function get_images($msg){
+
+    $arr=array();
+
+
+    preg_match_all(
+        '/\[img\](.*?)\[\/img\]/i',
+        $msg,
+        $m
+    );
+
+
+    if(!empty($m[1])){
+
+        foreach($m[1] as $v){
+
+            if(strpos($v,'http')===0){
+
+                $arr[]=$v;
+
+            }else{
+
+                $arr[]='https://a3x9r3.cdlf3.com'.$v;
+
+            }
+
+        }
+
+    }
+
+
+    return $arr;
+
+}
+
+
+
+/*
+回复
+*/
+
+$replies=DB::fetch_all(
+
+"SELECT
+
+pid,
+author,
+authorid,
+message,
+dateline
+
+FROM %t
+
+WHERE tid=%d
+
+AND first=0
+
+AND invisible>=0
+
+ORDER BY dateline ASC",
+
+array(
+'forum_post',
+$tid
+)
+
+);
+
+
+
+$list=array();
+
+
+$floor=2;
+
+
+foreach($replies as $r){
+
+
+$list[]=array(
+
+'floor'=>$floor,
+
+'pid'=>$r['pid'],
+
+'author'=>$r['author'],
+
+'authorid'=>$r['authorid'],
+
+'message'=>$r['message'],
+
+'images'=>get_images($r['message']),
+
+'dateline'=>$r['dateline']
+
+);
+
+
+$floor++;
+
+
+}
+
+
+
+echo json_encode([
+
+'code'=>0,
+
+'data'=>array(
+
+'thread'=>array(
+
+'tid'=>$thread['tid'],
+
+'fid'=>$thread['fid'],
+
+'author'=>$thread['author'],
+
+'authorid'=>$thread['authorid'],
+
+'subject'=>$thread['subject'],
+
+'message'=>$post['message'],
+
+'images'=>get_images($post['message']),
+
+'dateline'=>$thread['dateline']
+
+),
+
+
+'replies'=>$list
+
+
+)
+
+],JSON_UNESCAPED_UNICODE);
+
