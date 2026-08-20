@@ -1,10 +1,14 @@
 package com.qjw.forum
 
+import java.security.MessageDigest
+import java.util.UUID
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
+    private const val APP_SECRET = "APP_SECRET_2026"
+
     private var retrofit: Retrofit? = null
     private var currentUrl: String = ""
 
@@ -22,15 +26,21 @@ object ApiClient {
                     .client(
                         OkHttpClient.Builder()
                             .addInterceptor { chain ->
-                                val request = chain.request()
-                                    .newBuilder()
-                                    .apply {
-                                        UserStore.getToken()
-                                            .takeIf { it.isNotBlank() }
-                                            ?.let { header("X-Token", it) }
-                                    }
-                                    .build()
-                                chain.proceed(request)
+                                val builder = chain.request().newBuilder()
+                                val token = UserStore.getToken()
+
+                                if (token.isNotBlank()) {
+                                    val timestamp = (System.currentTimeMillis() / 1000).toString()
+                                    val nonce = UUID.randomUUID().toString().replace("-", "")
+
+                                    builder
+                                        .header("X-Token", token)
+                                        .header("X-Time", timestamp)
+                                        .header("X-Nonce", nonce)
+                                        .header("X-Sign", md5(token + timestamp + nonce + APP_SECRET))
+                                }
+
+                                chain.proceed(builder.build())
                             }
                             .build()
                     )
@@ -44,5 +54,13 @@ object ApiClient {
     fun reset() {
         retrofit = null
         currentUrl = ""
+    }
+
+    private fun md5(value: String): String {
+        return MessageDigest.getInstance("MD5")
+            .digest(value.toByteArray())
+            .joinToString("") { byte ->
+                (byte.toInt() and 0xff).toString(16).padStart(2, '0')
+            }
     }
 }
