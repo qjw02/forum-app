@@ -141,7 +141,7 @@ private fun MyThreadCard(
 @Composable
 private fun MyReplyCard(
     reply: MyReplyItem,
-    onOpenThread: (String) -> Unit
+    onOpenThread: (String, String?) -> Unit
 ) {
     Card(
         modifier = Modifier
