@@ -236,7 +236,11 @@ data class ReplyData(
 
     val total:Int,
 
-    val list:List<Reply>
+    val list:List<Reply>,
+
+    val page:Int? = 1,
+
+    val page_size:Int? = 20
 
 )
 
