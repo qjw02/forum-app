@@ -58,7 +58,11 @@ fun PostCard(
             Text(
 
                 text =
-                    post.subject,
+                    if((post.displayorder ?: 0) > 0){
+                        "📌 置顶  " + post.subject
+                    }else{
+                        post.subject
+                    },
 
 
                 style =
