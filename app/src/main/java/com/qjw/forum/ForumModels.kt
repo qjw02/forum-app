@@ -426,3 +426,26 @@ data class MyReplyItem(
     val subject: String?,
     val message: String?
 )
+
+
+// ===============================
+// 论坛通知
+// ===============================
+data class NotificationResponse(
+    val code: Int,
+    val message: String?,
+    val data: NotificationData?
+)
+
+data class NotificationData(
+    val count: Int?,
+    val list: List<NotificationItem>?
+)
+
+data class NotificationItem(
+    val id: String,
+    val type: String?,
+    val note: String?,
+    val from_id: String?,
+    val from_idtype: String?
+)
