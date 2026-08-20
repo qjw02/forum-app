@@ -13,13 +13,15 @@ $version = '';
 
 if ($scope === 'home') {
     $latest = DB::fetch_first(
-        "SELECT tid, lastpost, replies, views
-         FROM pre_forum_thread
-         ORDER BY lastpost DESC
-         LIMIT 1"
+        "SELECT MAX(lastpost) AS latestpost,
+                COUNT(*) AS threadcount,
+                COALESCE(SUM(displayorder), 0) AS pinned,
+                COALESCE(SUM(digest), 0) AS digests
+         FROM pre_forum_thread"
     );
 
-    $version = md5('home|' . json_encode($latest ?: array()));
+    // 精华、置顶状态或首页内容变化时才通知 APP 更新首页缓存。
+    $version = md5('home_v2|' . json_encode($latest ?: array()));
 } elseif ($scope === 'forum') {
     $fid = intval($_GET['fid'] ?? 0);
 
