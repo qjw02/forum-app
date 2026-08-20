@@ -449,3 +449,43 @@ data class NotificationItem(
     val from_id: String?,
     val from_idtype: String?
 )
+
+
+// ===============================
+// 论坛私信
+// ===============================
+data class PrivateMessageResponse(
+    val code: Int,
+    val message: String?,
+    val data: PrivateMessageData?
+)
+
+data class PrivateMessageData(
+    val unread: Int?,
+    val list: List<PrivateConversation>?
+)
+
+data class PrivateConversation(
+    val plid: String,
+    val subject: String?,
+    val message: String?,
+    val unread: Int?
+)
+
+data class PrivateMessageDetailResponse(
+    val code: Int,
+    val message: String?,
+    val data: PrivateMessageDetailData?
+)
+
+data class PrivateMessageDetailData(
+    val plid: String,
+    val list: List<PrivateChatItem>?
+)
+
+data class PrivateChatItem(
+    val pmid: String,
+    val uid: String,
+    val username: String?,
+    val message: String?
+)
