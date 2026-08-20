@@ -29,6 +29,8 @@ fun BottomBar(
 
     current:String,
 
+    unreadCount:Int,
+
     onChange:(String)->Unit
 
 ){
@@ -111,14 +113,29 @@ fun BottomBar(
                 icon = {
 
 
-                    Icon(
+                    if(item.key=="message" && unreadCount>0){
 
-                        item.icon,
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text(if(unreadCount>99) "99+" else unreadCount.toString())
+                                }
+                            }
+                        ){
+                            Icon(
+                                item.icon,
+                                contentDescription = item.title
+                            )
+                        }
 
-                        contentDescription =
-                            item.title
+                    }else{
 
-                    )
+                        Icon(
+                            item.icon,
+                            contentDescription = item.title
+                        )
+
+                    }
 
 
                 },
