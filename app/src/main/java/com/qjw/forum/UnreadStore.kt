@@ -14,6 +14,14 @@ object UnreadStore {
     val totalCount: Int
         get() = notificationCount + privateMessageCount
 
+    fun updateNotifications(count: Int) {
+        notificationCount = count.coerceAtLeast(0)
+    }
+
+    fun updatePrivateMessages(count: Int) {
+        privateMessageCount = count.coerceAtLeast(0)
+    }
+
     fun clear() {
         notificationCount = 0
         privateMessageCount = 0
@@ -28,7 +36,7 @@ object UnreadStore {
         try {
             val notices = ApiClient.api.getNotifications()
             if (notices.code == 0) {
-                notificationCount = notices.data?.unread ?: 0
+                updateNotifications(notices.data?.unread ?: 0)
             }
         } catch (_: Exception) {
         }
@@ -36,7 +44,7 @@ object UnreadStore {
         try {
             val messages = ApiClient.api.getPrivateMessages()
             if (messages.code == 0) {
-                privateMessageCount = messages.data?.unread ?: 0
+                updatePrivateMessages(messages.data?.unread ?: 0)
             }
         } catch (_: Exception) {
         }
