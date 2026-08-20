@@ -24,7 +24,8 @@ import com.qjw.forum.Post
 @Composable
 fun PostCard(
     post: Post,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
+    showPinnedLabel: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -41,7 +42,7 @@ fun PostCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if ((post.displayorder ?: 0) > 0) {
+                    text = if (showPinnedLabel && (post.displayorder ?: 0) > 0) {
                         "📌 置顶  " + post.subject
                     } else {
                         post.subject
