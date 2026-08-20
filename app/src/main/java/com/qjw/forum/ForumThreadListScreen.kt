@@ -37,20 +37,19 @@ fun ForumThreadListScreen(
     onCreatePost: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    var forumData by remember(fid) { mutableStateOf<ForumThreadData?>(null) }
-    var loading by remember(fid) { mutableStateOf(true) }
+    val cachedForum = remember(fid) { ContentCache.getForum(fid) }
+    var forumData by remember(fid) { mutableStateOf(cachedForum?.data) }
+    var loading by remember(fid) { mutableStateOf(cachedForum == null) }
     var message by remember(fid) { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
-    fun loadThreads() {
+    fun fetchThreads(version: String?) {
         scope.launch {
-            loading = true
-            message = ""
-
             try {
                 val result = ApiClient.api.getForumThreads(fid)
-                if (result.code == 0) {
+                if (result.code == 0 && result.data != null) {
                     forumData = result.data
+                    version?.let { ContentCache.saveForum(fid, it, result.data) }
                 } else {
                     message = result.message ?: "加载失败"
                 }
@@ -63,7 +62,26 @@ fun ForumThreadListScreen(
     }
 
     LaunchedEffect(fid) {
-        loadThreads()
+        scope.launch {
+            try {
+                val sync = ApiClient.api.getContentVersion("forum", fid)
+                val version = sync.data?.version
+
+                when {
+                    sync.code != 0 || version.isNullOrBlank() -> {
+                        if (cachedForum == null) fetchThreads(null) else loading = false
+                    }
+                    cachedForum?.version == version -> {
+                        loading = false
+                    }
+                    else -> {
+                        fetchThreads(version)
+                    }
+                }
+            } catch (_: Exception) {
+                if (cachedForum == null) fetchThreads(null) else loading = false
+            }
+        }
     }
 
     Column(
@@ -86,47 +104,38 @@ fun ForumThreadListScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        if (loading) {
-            Box(
+        when {
+            loading -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
-            return@Column
-        }
 
-        Text(
-            text = forumData?.name ?: "板块",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
+            forumData?.list.isNullOrEmpty() -> Text(
+                text = if (message.isNotEmpty()) message else "暂无帖子"
+            )
 
-        Spacer(Modifier.height(10.dp))
+            else -> {
+                Text(
+                    text = forumData?.name ?: "板块",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
 
-        if (forumData?.list.isNullOrEmpty()) {
-            Text("暂无帖子")
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .widthIn(max = 600.dp),
-                contentPadding = PaddingValues(bottom = 20.dp)
-            ) {
-                items(forumData!!.list, key = { it.tid }) { post ->
-                    PostCard(
-                        post = post,
-                        onClick = onOpenThread
-                    )
+                Spacer(Modifier.height(10.dp))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 600.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
+                ) {
+                    items(forumData!!.list, key = { it.tid }) { post ->
+                        PostCard(post = post, onClick = onOpenThread)
+                    }
                 }
             }
-        }
-
-        if (message.isNotEmpty()) {
-            Text(
-                text = message,
-                modifier = Modifier.padding(10.dp)
-            )
         }
     }
 }
