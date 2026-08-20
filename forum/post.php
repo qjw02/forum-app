@@ -362,8 +362,7 @@ if($contact !== '' && $price > 0){
         array(
             'tid'=>$tid,
             'optionid'=>7,
-            'price'=>$price,
-            'dateline'=>TIMESTAMP
+            'price'=>$price
         )
     );
 }
