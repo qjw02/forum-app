@@ -447,7 +447,8 @@ data class NotificationItem(
     val type: String?,
     val note: String?,
     val from_id: String?,
-    val from_idtype: String?
+    val from_idtype: String?,
+    val tid: String?
 )
 
 
