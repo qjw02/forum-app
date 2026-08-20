@@ -23,7 +23,9 @@ $forums = DB::fetch_all(
     "SELECT fid,name
      FROM ".DB::table('forum_forum')."
      WHERE status=1
-     ORDER BY displayorder ASC"
+       AND name NOT IN (%s, %s)
+     ORDER BY displayorder ASC",
+    array('成都娱乐', '千娇站务')
 
 );
 
