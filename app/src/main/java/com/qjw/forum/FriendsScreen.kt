@@ -1,11 +1,13 @@
 package com.qjw.forum
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import coil.compose.AsyncImage
 
 @Composable
 fun FriendsScreen(onBack: () -> Unit) {
@@ -148,14 +151,31 @@ fun FriendsScreen(onBack: () -> Unit) {
 }
 
 @Composable
+private fun FriendIdentity(friend: FriendItem) {
+    Row {
+        AsyncImage(
+            model = DomainManager.getDomain().trimEnd('/') +
+                "/uc_server/avatar.php?uid=" + friend.fuid + "&size=middle",
+            contentDescription = null,
+            modifier = Modifier.size(48.dp)
+        )
+
+        Column(modifier = Modifier.padding(start = 12.dp)) {
+            Text(friend.username ?: "用户 " + friend.fuid, fontWeight = FontWeight.Bold)
+            Text("UID：" + friend.fuid)
+            Text("用户组：" + (friend.group_name ?: "普通会员"))
+        }
+    }
+}
+
+@Composable
 private fun FriendRequestCard(
     friend: FriendItem,
     onAccept: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(friend.username ?: "用户 " + friend.fuid, fontWeight = FontWeight.Bold)
-            Text("UID：" + friend.fuid)
+            FriendIdentity(friend)
             Spacer(Modifier.height(10.dp))
             Button(onClick = onAccept) { Text("同意好友申请") }
         }
