@@ -129,6 +129,32 @@ foreach($notice as $row){
 
     }
 
+    // 部分 Discuz 版本没有 from_idtype：回复通知的 from_id 可能是 tid 或 pid。
+    if(!$tid && $row['type']=='post' && intval($row['from_id'])){
+
+        $candidate=intval($row['from_id']);
+
+        $thread_exists=DB::result_first(
+            "SELECT tid FROM pre_forum_thread WHERE tid=%d",
+            array($candidate)
+        );
+
+        if($thread_exists){
+
+            $tid=$candidate;
+
+        }else{
+
+            $pid=$candidate;
+            $tid=intval(DB::result_first(
+                "SELECT tid FROM pre_forum_post WHERE pid=%d",
+                array($candidate)
+            ));
+
+        }
+
+    }
+
     // Discuz 的“回复通知”通常只保存 tid；根据通知人和时间找到对应回复。
     if(!$pid && $tid && $row['type']=='post' && $row['authorid']){
 
