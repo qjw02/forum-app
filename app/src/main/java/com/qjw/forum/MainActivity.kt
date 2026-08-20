@@ -25,6 +25,8 @@ class MainActivity : ComponentActivity(){
 
         UserStore.init(this)
 
+        ContentCache.init(this)
+
 
 
         // 初始化动态域名管理
