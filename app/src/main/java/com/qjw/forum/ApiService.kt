@@ -268,6 +268,9 @@ interface ApiService {
     ): BaseResponse
 
 
+    @GET("api/user/referral_stats.php")
+    suspend fun getReferralStats(): ReferralStatsResponse
+
     @GET("api/user/friends.php")
     suspend fun getFriends(
         @Query("action") action: String = "list"
