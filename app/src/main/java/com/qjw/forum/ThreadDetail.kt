@@ -154,7 +154,10 @@ fun ThreadDetail(
 
                 val result =
 
-                    ApiClient.api.getThread(tid)
+                    ApiClient.api.getThread(
+                        tid = tid,
+                        pid = focusPid
+                    )
 
 
 
