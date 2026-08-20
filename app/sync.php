@@ -20,8 +20,18 @@ if ($scope === 'home') {
          FROM pre_forum_thread"
     );
 
-    // 精华、置顶状态或首页内容变化时才通知 APP 更新首页缓存。
-    $version = md5('home_v2|' . json_encode($latest ?: array()));
+    $announcement = DB::fetch_first(
+        "SELECT id, subject, message, displayorder, starttime, endtime
+         FROM pre_forum_announcement
+         ORDER BY id DESC
+         LIMIT 1"
+    );
+
+    // 精华、置顶或后台公告变化时才通知 APP 更新首页缓存。
+    $version = md5('home_v3|' . json_encode(array(
+        'threads' => $latest ?: array(),
+        'announcement' => $announcement ?: array()
+    )));
 } elseif ($scope === 'forum') {
     $fid = intval($_GET['fid'] ?? 0);
 
