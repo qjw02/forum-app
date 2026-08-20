@@ -476,6 +476,22 @@ if($contact_row){
 
 }
 
+/*
+ * 主题分类信息：联系方式(optionid=7)由付费逻辑单独处理，不能在这里直接返回。
+ */
+$category_info=DB::fetch_all(
+
+    "SELECT v.optionid,v.value,o.title
+     FROM pre_forum_typeoptionvar v
+     LEFT JOIN pre_forum_typeoption o ON o.optionid=v.optionid
+     WHERE v.tid=%d
+     AND v.optionid<>7
+     ORDER BY v.optionid ASC",
+
+    array($tid)
+
+);
+
 
 /*
  * 首帖
@@ -794,10 +810,9 @@ echo json_encode([
 
 ),
 
+'category_info'=>$category_info,
 
-
-
-
+'contact'=>$contact,
 
 'replies'=>array(
 
