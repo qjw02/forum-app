@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 fun MyContentScreen(
     showReplies: Boolean,
     onBack: () -> Unit,
-    onOpenThread: (String) -> Unit
+    onOpenThread: (String, String?) -> Unit
 ) {
     var loading by remember(showReplies) { mutableStateOf(true) }
     var error by remember(showReplies) { mutableStateOf("") }
@@ -119,12 +119,12 @@ fun MyContentScreen(
 @Composable
 private fun MyThreadCard(
     thread: MyThreadItem,
-    onOpenThread: (String) -> Unit
+    onOpenThread: (String, String?) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpenThread(thread.tid) }
+            .clickable { onOpenThread(thread.tid, null) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(thread.subject, fontWeight = FontWeight.Bold)
@@ -146,7 +146,7 @@ private fun MyReplyCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpenThread(reply.tid) }
+            .clickable { onOpenThread(reply.tid, reply.pid) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
