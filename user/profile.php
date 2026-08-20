@@ -52,7 +52,7 @@ m.uid,
 m.username,
 m.groupid,
 m.credits,
-c.extcredits1,
+c.extcredits4 AS money,
 c.extcredits2,
 c.posts,
 c.threads
@@ -118,7 +118,7 @@ echo json_encode([
 
     'credits'=>$member['credits'],
 
-    'money'=>$member['extcredits1'],
+    'money'=>$member['money'],
 
     'threads'=>$count['threads'] ?? 0,
 
