@@ -82,6 +82,8 @@ data class ProfileData(
 
     val groupid:Int?,
 
+    val group_name:String? = null,
+
     val credits:Int?,
 
     val money:Int?,
