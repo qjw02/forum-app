@@ -50,7 +50,10 @@ interface ApiService {
         tid: String,
 
         @Query("token")
-        token: String = UserStore.getToken()
+        token: String = UserStore.getToken(),
+
+        @Query("pid")
+        pid: String? = null
     ): ThreadResponse
 
 
