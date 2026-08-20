@@ -263,9 +263,19 @@ fun AppNav(){
 
                         onReferral = {
 
-
                             page="referral"
 
+                        },
+
+                        onMyThreads = {
+
+                            page="myThreads"
+
+                        },
+
+                        onMyReplies = {
+
+                            page="myReplies"
 
                         }
 
