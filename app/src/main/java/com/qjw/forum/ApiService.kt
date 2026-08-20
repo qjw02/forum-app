@@ -46,11 +46,12 @@ interface ApiService {
 
     @GET("api/forum/thread.php")
     suspend fun getThread(
-
         @Query("tid")
-        tid:String
+        tid: String,
 
-    ):ThreadResponse
+        @Query("token")
+        token: String = UserStore.getToken()
+    ): ThreadResponse
 
 
 
