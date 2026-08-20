@@ -1,130 +1,57 @@
 <?php
 
-define('IN_API',true);
-
-
+define('IN_API', true);
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
-
 
 C::app()->init();
 
-
 header('Content-Type: application/json; charset=utf-8');
 
+$token = $_SERVER['HTTP_X_TOKEN'] ?? '';
 
-
-// 签名验证
-file_put_contents(
-    '/tmp/sign_debug.txt',
-    prin// token
-
-$token=$_SERVER['HTTP_X_TOKEN'] ?? '';
-
-
-$data=C::t('app_token')->get_by_token($token);
-
-
-
-if(!$data || $data['expire'] < TIMESTAMP){
-
-    echo json_encode([
-        'code'=>401,
-        'message'=>'token无效'
-    ],JSON_UNESCAPED_UNICODE);
-
+if (!$token) {
+    echo json_encode(array('code' => 401, 'message' => '请先登录'), JSON_UNESCAPED_UNICODE);
     exit;
-
 }
 
+$tokenData = C::t('app_token')->get_by_token($token);
 
-
-$uid=intval($data['uid']);
-
-
-
-// 用户资料
-
-$member=DB::fetch_first(
-
-"SELECT
-
-m.uid,
-m.username,
-m.groupid,
-m.credits,
-c.extcredits4 AS money,
-c.extcredits2,
-c.posts,
-c.threads
-
-FROM pre_common_member m
-
-LEFT JOIN pre_common_member_count c
-
-ON m.uid=c.uid
-
-WHERE m.uid=%d",
-
-array($uid)
-
-);
-
-
-
-if(!$member){
-
-    echo json_encode([
-        'code'=>404,
-        'message'=>'用户不存在'
-    ],JSON_UNESCAPED_UNICODE);
-
+if (!$tokenData || intval($tokenData['expire']) < TIMESTAMP) {
+    echo json_encode(array('code' => 401, 'message' => '登录已失效'), JSON_UNESCAPED_UNICODE);
     exit;
-
 }
 
+$uid = intval($tokenData['uid']);
 
-
-// 用户统计
-
-$count=array(
-
-'threads'=>$member['threads'] ?? 0,
-
-'posts'=>$member['posts'] ?? 0
-
+$member = DB::fetch_first(
+    "SELECT m.uid, m.username, m.groupid, m.credits,
+            c.extcredits4 AS money, c.posts, c.threads,
+            g.grouptitle AS group_name
+     FROM pre_common_member m
+     LEFT JOIN pre_common_member_count c ON c.uid = m.uid
+     LEFT JOIN pre_common_usergroup g ON g.groupid = m.groupid
+     WHERE m.uid = %d",
+    array($uid)
 );
 
+if (!$member) {
+    echo json_encode(array('code' => 404, 'message' => '用户不存在'), JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
+$avatar = $_G['siteurl'] . 'uc_server/avatar.php?uid=' . $uid . '&size=middle';
 
-// 头像
-
-$avatar=$_G['siteurl']."uc_server/avatar.php?uid=".$uid."&size=middle";
-
-
-
-echo json_encode([
-
-'code'=>0,
-
-'data'=>array(
-
-    'uid'=>$member['uid'],
-
-    'username'=>$member['username'],
-
-    'avatar'=>$avatar,
-
-    'groupid'=>$member['groupid'],
-
-    'credits'=>$member['credits'],
-
-    'money'=>$member['money'],
-
-    'threads'=>$count['threads'] ?? 0,
-
-    'posts'=>$count['posts'] ?? 0
-
-)
-
-],JSON_UNESCAPED_UNICODE);
-
+echo json_encode(array(
+    'code' => 0,
+    'data' => array(
+        'uid' => $member['uid'],
+        'username' => $member['username'],
+        'avatar' => $avatar,
+        'groupid' => intval($member['groupid']),
+        'group_name' => $member['group_name'] ?: '普通会员',
+        'credits' => intval($member['credits']),
+        'money' => intval($member['money']),
+        'threads' => intval($member['threads']),
+        'posts' => intval($member['posts'])
+    )
+), JSON_UNESCAPED_UNICODE);
