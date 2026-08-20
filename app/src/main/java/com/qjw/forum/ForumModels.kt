@@ -520,5 +520,6 @@ data class FriendsData(
 
 data class FriendItem(
     val fuid: String,
-    val username: String?
+    val username: String?,
+    val group_name: String?
 )
