@@ -310,6 +310,12 @@ fun AppNav(){
 
                             page="myReplies"
 
+                        },
+
+                        onFriends = {
+
+                            page="friends"
+
                         }
 
 
@@ -328,6 +334,15 @@ fun AppNav(){
 
 
 
+
+                // 好友管理
+                page=="friends" -> {
+
+                    FriendsScreen(
+                        onBack = { page="profile" }
+                    )
+
+                }
 
                 // 我的主题
                 page=="myThreads" -> {
