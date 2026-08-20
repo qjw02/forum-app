@@ -4,6 +4,7 @@ package com.qjw.forum
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -77,6 +78,8 @@ fun ThreadDetail(
 
     tid:String,
 
+    focusPid:String? = null,
+
     onBack:()->Unit,
 
     onLogin:()->Unit
@@ -125,6 +128,9 @@ fun ThreadDetail(
 
     val scope =
         rememberCoroutineScope()
+
+    val replyListState =
+        rememberLazyListState()
 
 
 
@@ -211,6 +217,21 @@ fun ThreadDetail(
 
     }
 
+    LaunchedEffect(data, focusPid){
+
+        val replyIndex =
+            data?.replies?.list
+                ?.indexOfFirst { it.pid == focusPid }
+                ?: -1
+
+        if(replyIndex >= 0){
+
+            replyListState.scrollToItem(replyIndex + 1)
+
+        }
+
+    }
+
 
 
 
@@ -285,6 +306,8 @@ fun ThreadDetail(
 
 
                     LazyColumn(
+
+                        state = replyListState,
 
                         modifier =
                             Modifier
@@ -663,13 +686,24 @@ fun ThreadDetail(
 
 
                         items(
-                            threadData.replies.list
+                            items = threadData.replies.list,
+                            key = { it.pid }
                         ){ reply ->
 
 
 
 
                             Card(
+
+                                colors =
+                                    if(reply.pid == focusPid){
+                                        CardDefaults.cardColors(
+                                            containerColor =
+                                                MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    }else{
+                                        CardDefaults.cardColors()
+                                    },
 
                                 modifier =
                                     Modifier
