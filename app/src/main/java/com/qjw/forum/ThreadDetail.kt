@@ -352,11 +352,15 @@ fun ThreadDetail(
 
 
 
-                            Text(
-                                "作者：" + threadData.thread.author.username +
-                                    " · " +
-                                    (threadData.thread.author.group_name ?: "普通会员")
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ){
+                                Text("作者：" + threadData.thread.author.username + " · ")
+                                Text(
+                                    text = threadData.thread.author.group_name ?: "普通会员",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
 
 
 
@@ -732,9 +736,15 @@ fun ThreadDetail(
                                 ){
 
 
-                                    Text(
-                                        reply.author.username
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ){
+                                        Text(reply.author.username + " · ")
+                                        Text(
+                                            text = reply.author.group_name ?: "普通会员",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
 
 
 
