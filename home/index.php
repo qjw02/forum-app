@@ -54,6 +54,25 @@ function add_cover_images($threads) {
     return $threads;
 }
 
+/* Discuz 后台的当前文字公告（仅公开公告）。 */
+$announcement = DB::fetch_first(
+    "SELECT subject, message
+     FROM pre_forum_announcement
+     WHERE type=0
+       AND starttime<=%d
+       AND (endtime=0 OR endtime>%d)
+       AND (groups='' OR groups IS NULL)
+     ORDER BY displayorder DESC, id DESC
+     LIMIT 1",
+    array(TIMESTAMP, TIMESTAMP)
+);
+
+if ($announcement) {
+    $announcement['message'] = trim(
+        preg_replace('/<br\s*\/?>/i', "\n", strip_tags($announcement['message']))
+    );
+}
+
 /* 幻灯片：精华主题 + 正文首图 */
 $banner = DB::fetch_all(
     "SELECT tid, subject
@@ -98,6 +117,7 @@ echo json_encode(array(
         'banner' => $banner,
         'forums' => $forums,
         'hot' => $hot,
-        'new' => $new
+        'new' => $new,
+        'announcement' => $announcement ?: null
     )
 ), JSON_UNESCAPED_UNICODE);
