@@ -1,6 +1,5 @@
 package com.qjw.forum
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -173,14 +172,13 @@ private fun ProfileAction(
     title: String,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+    OutlinedButton(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
     ) {
         Text(
             text = title,
-            modifier = Modifier.padding(18.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         )
     }
 }
