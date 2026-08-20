@@ -214,7 +214,8 @@ fun AppNav(){
 
 
                     MessageScreen(
-                        onOpenThread = { tid -> page="thread/$tid" }
+                        onOpenThread = { tid -> page="thread/$tid" },
+                        onOpenChat = { plid -> page="chat/$plid" }
                     )
 
 
@@ -228,6 +229,18 @@ fun AppNav(){
 
 
 
+
+                // 私信聊天
+                page.startsWith("chat/") -> {
+
+                    val plid = page.removePrefix("chat/")
+
+                    PrivateChatScreen(
+                        plid = plid,
+                        onBack = { page="message" }
+                    )
+
+                }
 
                 // 推广中心
 
