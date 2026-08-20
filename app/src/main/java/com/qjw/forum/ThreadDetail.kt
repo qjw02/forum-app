@@ -417,7 +417,24 @@ fun ThreadDetail(
                                 Modifier.height(10.dp)
                             )
 
-
+                            if (threadData.category_info.isNotEmpty()) {
+                                Card(modifier = Modifier.fillMaxWidth()) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            text = "分类信息",
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        threadData.category_info.forEach { field ->
+                                            val title = field.title?.takeIf { it.isNotBlank() } ?: "信息"
+                                            val value = cleanDiscuzText(field.value ?: "")
+                                            if (value.isNotBlank()) {
+                                                Text("$title：$value")
+                                            }
+                                        }
+                                    }
+                                }
+                                Spacer(Modifier.height(14.dp))
+                            }
 
                             Text(
                                 text = cleanDiscuzText(threadData.thread.content),
