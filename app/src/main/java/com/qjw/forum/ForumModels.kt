@@ -373,3 +373,16 @@ data class ForumListResponse(
     val data:List<ForumItem>?
 
 )
+
+// ===============================
+// 内容同步版本
+// ===============================
+data class ContentVersionResponse(
+    val code: Int,
+    val message: String?,
+    val data: ContentVersionData?
+)
+
+data class ContentVersionData(
+    val version: String
+)
