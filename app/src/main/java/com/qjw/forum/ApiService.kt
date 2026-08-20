@@ -71,7 +71,6 @@ interface ApiService {
     @FormUrlEncoded
     @POST("api/forum/post.php")
     suspend fun createPost(
-
         @Field("fid")
         fid:String,
 
@@ -79,8 +78,13 @@ interface ApiService {
         subject:String,
 
         @Field("message")
-        message:String
+        message:String,
 
+        @Field("contact")
+        contact:String = "",
+
+        @Field("price")
+        price:Int = 0
     ):BaseResponse
 
 
