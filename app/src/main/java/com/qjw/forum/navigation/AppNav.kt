@@ -213,7 +213,9 @@ fun AppNav(){
 
 
 
-                    MessageScreen()
+                    MessageScreen(
+                        onOpenThread = { tid -> page="thread/$tid" }
+                    )
 
 
 
