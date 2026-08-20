@@ -244,7 +244,9 @@ interface ApiService {
 
 
     @GET("api/user/notice.php")
-    suspend fun getNotifications(): NotificationResponse
+    suspend fun getNotifications(
+        @Query("read") read: Int = 0
+    ): NotificationResponse
 
 
     @GET("api/user/message.php")
