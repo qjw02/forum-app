@@ -129,7 +129,9 @@ data class Banner(
 
     val tid:String?,
 
-    val subject:String?
+    val subject:String?,
+
+    val image:String? = null
 
 )
 
@@ -161,7 +163,9 @@ data class Post(
 
     val replies:Int,
 
-    val displayorder:Int? = 0
+    val displayorder:Int? = 0,
+
+    val image:String? = null
 
 )
 
