@@ -209,6 +209,29 @@ if($page_size>50){
 }
 
 
+/*
+ * 指定回复定位：自动请求该回复所在页
+ */
+$focus_pid=intval($_GET['pid'] ?? 0);
+
+if($focus_pid && $tid){
+
+    $before=DB::result_first(
+
+        "SELECT COUNT(*)
+         FROM pre_forum_post
+         WHERE tid=%d
+         AND first=0
+         AND pid<%d",
+
+        array($tid,$focus_pid)
+
+    );
+
+    $page=intval(floor(intval($before)/$page_size))+1;
+
+}
+
 
 $start=($page-1)*$page_size;
 
