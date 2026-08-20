@@ -46,10 +46,10 @@ fun MessageScreen(
 
         try {
             if (selectedTab == 0) {
-                val result = ApiClient.api.getNotifications()
+                val result = ApiClient.api.getNotifications(read = 1)
                 if (result.code == 0) {
                     notifications = result.data?.list.orEmpty()
-                    UnreadStore.updateNotifications(result.data?.unread ?: 0)
+                    UnreadStore.updateNotifications(0)
                 } else {
                     error = result.message ?: "加载消息失败"
                 }
