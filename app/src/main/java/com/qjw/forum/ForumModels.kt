@@ -386,3 +386,43 @@ data class ContentVersionResponse(
 data class ContentVersionData(
     val version: String
 )
+
+
+// ===============================
+// 我的主题和回复
+// ===============================
+data class MyThreadsResponse(
+    val code: Int,
+    val message: String?,
+    val data: MyThreadsData?
+)
+
+data class MyThreadsData(
+    val total: Int?,
+    val list: List<MyThreadItem>?
+)
+
+data class MyThreadItem(
+    val tid: String,
+    val subject: String,
+    val views: Int?,
+    val replies: Int?
+)
+
+data class MyRepliesResponse(
+    val code: Int,
+    val message: String?,
+    val data: MyRepliesData?
+)
+
+data class MyRepliesData(
+    val total: Int?,
+    val list: List<MyReplyItem>?
+)
+
+data class MyReplyItem(
+    val pid: String,
+    val tid: String,
+    val subject: String?,
+    val message: String?
+)
