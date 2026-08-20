@@ -533,3 +533,17 @@ data class FriendItem(
     val username: String?,
     val group_name: String?
 )
+
+
+// ===============================
+// 推广统计
+// ===============================
+data class ReferralStatsResponse(
+    val code: Int,
+    val message: String?,
+    val data: ReferralStatsData?
+)
+
+data class ReferralStatsData(
+    val visit_count: Int?
+)
