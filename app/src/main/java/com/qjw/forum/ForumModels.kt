@@ -200,12 +200,20 @@ data class ThreadData(
 
     val replies:ReplyData,
 
+    val category_info:List<CategoryInfo> = emptyList(),
+
     // 新增：联系方式收费信息
     val contact:ContactInfo? = null
 
 )
 
 
+
+data class CategoryInfo(
+    val optionid:Int?,
+    val title:String?,
+    val value:String?
+)
 
 data class ThreadInfo(
 
