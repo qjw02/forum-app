@@ -286,6 +286,28 @@ fun AppNav(){
 
 
 
+                // 我的主题
+                page=="myThreads" -> {
+
+                    MyContentScreen(
+                        showReplies = false,
+                        onBack = { page="profile" },
+                        onOpenThread = { tid -> page="thread/$tid" }
+                    )
+
+                }
+
+                // 我的回复
+                page=="myReplies" -> {
+
+                    MyContentScreen(
+                        showReplies = true,
+                        onBack = { page="profile" },
+                        onOpenThread = { tid -> page="thread/$tid" }
+                    )
+
+                }
+
                 // 登录我的
 
                 page=="login/profile" -> {
