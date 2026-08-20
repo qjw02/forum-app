@@ -67,7 +67,7 @@ if ($scope === 'home') {
          LIMIT 1"
     );
 
-    $version = md5('forums|' . json_encode($latestForum ?: array()));
+    $version = md5('forums_v2|' . json_encode($latestForum ?: array()));
 } else {
     echo json_encode(array(
         'code' => 400,
