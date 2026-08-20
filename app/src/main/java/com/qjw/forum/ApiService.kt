@@ -239,4 +239,8 @@ interface ApiService {
         @Query("page_size") pageSize: Int = 20
     ): MyRepliesResponse
 
+
+    @GET("api/user/notice.php")
+    suspend fun getNotifications(): NotificationResponse
+
 }
