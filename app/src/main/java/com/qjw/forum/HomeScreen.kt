@@ -140,7 +140,13 @@ fun HomeScreen(
                     }
                 }
 
-                item { NoticeCard() }
+                item {
+                    NoticeCard(
+                        title = homeData?.announcement?.subject ?: "公告",
+                        text = homeData?.announcement?.message
+                            ?: "欢迎来到 QJWForum，请遵守社区规则，文明交流"
+                    )
+                }
 
                 item {
                     BannerView(
