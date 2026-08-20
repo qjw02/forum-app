@@ -1,5 +1,6 @@
 package com.qjw.forum
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -18,8 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -28,8 +28,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onRegister: () -> Unit,
-    onForgotPassword: () -> Unit
+    onRegister: () -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -85,13 +84,13 @@ fun LoginScreen(
 
                     try {
                         val result = ApiClient.api.login(username.trim(), password)
-
                         if (result.code == 0 && result.data != null) {
                             UserStore.saveUser(
                                 uid = result.data.uid,
                                 username = result.data.username,
                                 token = result.data.token
                             )
+                            ProfileCache.clear(result.data.uid)
                             onLoginSuccess()
                         } else {
                             message = result.message ?: "登录失败"
@@ -104,25 +103,17 @@ fun LoginScreen(
                 }
             }
         ) {
-            if (submitting) {
-                CircularProgressIndicator()
-            } else {
-                Text("登录")
-            }
+            if (submitting) CircularProgressIndicator() else Text("登录")
         }
 
         Spacer(Modifier.height(15.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
+            horizontalArrangement = Arrangement.Center
         ) {
             TextButton(onClick = onRegister) {
                 Text("注册账号")
-            }
-
-            TextButton(onClick = onForgotPassword) {
-                Text("忘记密码")
             }
         }
 
