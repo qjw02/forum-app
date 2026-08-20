@@ -264,4 +264,17 @@ interface ApiService {
         @Field("message") message: String
     ): BaseResponse
 
+
+    @GET("api/user/friends.php")
+    suspend fun getFriends(
+        @Query("action") action: String = "list"
+    ): FriendsResponse
+
+    @FormUrlEncoded
+    @POST("api/user/friends.php")
+    suspend fun friendAction(
+        @Field("action") action: String,
+        @Field("uid") uid: String
+    ): BaseResponse
+
 }
