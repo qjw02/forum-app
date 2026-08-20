@@ -22,7 +22,22 @@ $token=$_SERVER['HTTP_X_TOKEN'] ?? '';
 
 if(!$token){
 
-    echo json_encode([
+    if($mark_read){
+
+    DB::query(
+
+        "UPDATE pre_home_notification
+         SET new=0
+         WHERE uid=%d",
+
+        array($uid)
+
+    );
+
+}
+
+
+echo json_encode([
         'code'=>401,
         'message'=>'token缺失'
     ],JSON_UNESCAPED_UNICODE);
@@ -49,6 +64,8 @@ if(!$data || $data['expire'] < TIMESTAMP){
 
 
 $uid=intval($data['uid']);
+
+$mark_read=intval($_GET['read'] ?? 0);
 
 
 
