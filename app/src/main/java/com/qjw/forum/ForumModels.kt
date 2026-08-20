@@ -1,3 +1,5 @@
+import com.google.gson.annotations.SerializedName
+
 package com.qjw.forum
 
 
@@ -445,6 +447,8 @@ data class NotificationData(
 
 data class NotificationItem(
     val id: String,
+    @SerializedName("new")
+    val isNew: Int?,
     val type: String?,
     val note: String?,
     val from_id: String?,
