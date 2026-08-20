@@ -155,6 +155,35 @@ foreach($notice as $row){
 
     }
 
+    // 极少数旧通知没有保存主题 ID：按通知人和通知时间反查对应回复。
+    if(!$tid && $row['type']=='post' && $row['authorid']){
+
+        $reply=DB::fetch_first(
+
+            "SELECT pid,tid
+             FROM pre_forum_post
+             WHERE authorid=%d
+             AND first=0
+             AND dateline<=%d
+             ORDER BY dateline DESC
+             LIMIT 1",
+
+            array(
+                intval($row['authorid']),
+                intval($row['dateline'])
+            )
+
+        );
+
+        if($reply){
+
+            $pid=intval($reply['pid']);
+            $tid=intval($reply['tid']);
+
+        }
+
+    }
+
     // Discuz 的“回复通知”通常只保存 tid；根据通知人和时间找到对应回复。
     if(!$pid && $tid && $row['type']=='post' && $row['authorid']){
 
