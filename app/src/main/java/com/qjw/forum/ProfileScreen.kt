@@ -1,6 +1,8 @@
 package com.qjw.forum
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +66,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .widthIn(max = 600.dp)
             .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = "我的",
@@ -124,6 +128,15 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(20.dp))
 
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onReferral
+                ) {
+                    Text("🎁 推广中心")
+                }
+
+                Spacer(Modifier.height(20.dp))
+
                 Text(
                     text = "我的功能",
                     style = MaterialTheme.typography.titleMedium
@@ -132,8 +145,6 @@ fun ProfileScreen(
                 Spacer(Modifier.height(10.dp))
 
                 ProfileAction("📝 发布帖子", onCreatePost)
-                Spacer(Modifier.height(10.dp))
-                ProfileAction("🎁 推广中心", onReferral)
                 Spacer(Modifier.height(10.dp))
                 ProfileAction("📄 我的主题") {}
                 Spacer(Modifier.height(10.dp))
