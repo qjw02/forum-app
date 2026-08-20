@@ -9,9 +9,6 @@ require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 C::app()->init();
 
 
-require_once '/www/wwwroot/qq/wwwroot/api/common/sign.php';
-
-
 header('Content-Type: application/json; charset=utf-8');
 
 
@@ -19,27 +16,7 @@ header('Content-Type: application/json; charset=utf-8');
 // 签名验证
 file_put_contents(
     '/tmp/sign_debug.txt',
-    print_r([
-        'token'=>$_SERVER['HTTP_X_TOKEN'] ?? '',
-        'time'=>$_SERVER['HTTP_X_TIME'] ?? '',
-        'nonce'=>$_SERVER['HTTP_X_NONCE'] ?? '',
-        'sign'=>$_SERVER['HTTP_X_SIGN'] ?? ''
-    ],true)
-);
-if(!check_api_sign()){
-
-    echo json_encode([
-        'code'=>403,
-        'message'=>'签名错误'
-    ],JSON_UNESCAPED_UNICODE);
-
-    exit;
-
-}
-
-
-
-// token
+    prin// token
 
 $token=$_SERVER['HTTP_X_TOKEN'] ?? '';
 
