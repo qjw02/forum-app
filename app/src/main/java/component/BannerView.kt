@@ -80,12 +80,6 @@ fun BannerView(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "精华推荐",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
                             text = banner.subject ?: "QJWForum",
                             style = MaterialTheme.typography.titleLarge,
                             maxLines = 3
