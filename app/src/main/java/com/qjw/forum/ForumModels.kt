@@ -502,3 +502,23 @@ data class PrivateChatItem(
     val username: String?,
     val message: String?
 )
+
+
+// ===============================
+// 好友管理
+// ===============================
+data class FriendsResponse(
+    val code: Int,
+    val message: String?,
+    val data: FriendsData?
+)
+
+data class FriendsData(
+    val friends: List<FriendItem>?,
+    val requests: List<FriendItem>?
+)
+
+data class FriendItem(
+    val fuid: String,
+    val username: String?
+)
