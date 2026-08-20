@@ -87,9 +87,12 @@ $banner = add_cover_images($banner);
 $forums = DB::fetch_all(
     "SELECT fid, name
      FROM pre_forum_forum
-     WHERE type='forum' AND status=1
+     WHERE type='forum'
+       AND status=1
+       AND name NOT IN (%s, %s)
      ORDER BY displayorder ASC
-     LIMIT 8"
+     LIMIT 8",
+    array('成都娱乐', '千娇站务')
 );
 
 /* 热门区：置顶主题 + 正文首图 */
