@@ -260,7 +260,9 @@ data class Author(
 
     val username:String,
 
-    val avatar:String?
+    val avatar:String?,
+
+    val group_name:String? = null
 
 )
 
