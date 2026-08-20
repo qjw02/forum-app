@@ -226,7 +226,13 @@ fun AppNav(){
 
 
                     MessageScreen(
-                        onOpenThread = { tid -> page="thread/$tid?back=message" },
+                        onOpenThread = { tid, pid ->
+                            page = if (pid.isNullOrBlank()) {
+                                "thread/$tid?back=message"
+                            } else {
+                                "thread/$tid?back=message&pid=$pid"
+                            }
+                        },
                         onOpenChat = { plid -> page="chat/$plid" }
                     )
 
@@ -329,7 +335,13 @@ fun AppNav(){
                     MyContentScreen(
                         showReplies = false,
                         onBack = { page="profile" },
-                        onOpenThread = { tid -> page="thread/$tid" }
+                        onOpenThread = { tid, pid ->
+                            page = if (pid.isNullOrBlank()) {
+                                "thread/$tid?back=myThreads"
+                            } else {
+                                "thread/$tid?back=myThreads&pid=$pid"
+                            }
+                        }
                     )
 
                 }
@@ -340,7 +352,13 @@ fun AppNav(){
                     MyContentScreen(
                         showReplies = true,
                         onBack = { page="profile" },
-                        onOpenThread = { tid -> page="thread/$tid" }
+                        onOpenThread = { tid, pid ->
+                            page = if (pid.isNullOrBlank()) {
+                                "thread/$tid?back=myReplies"
+                            } else {
+                                "thread/$tid?back=myReplies&pid=$pid"
+                            }
+                        }
                     )
 
                 }
@@ -623,9 +641,24 @@ fun AppNav(){
 
                         threadRoute.substringBefore("?")
 
-                    val returnToMessage =
+                    val returnPage =
 
-                        threadRoute.contains("back=message")
+                        threadRoute
+                            .substringAfter("back=", "home")
+                            .substringBefore("&")
+                            .takeIf {
+                                it == "message" ||
+                                it == "myThreads" ||
+                                it == "myReplies"
+                            }
+                            ?: "home"
+
+                    val focusPid =
+
+                        threadRoute
+                            .substringAfter("pid=", "")
+                            .substringBefore("&")
+                            .takeIf { it.isNotBlank() }
 
 
 
@@ -647,13 +680,15 @@ fun AppNav(){
 
                         tid=tid,
 
+                        focusPid=focusPid,
+
 
 
                         onBack = {
 
 
 
-                            page=if(returnToMessage) "message" else "home"
+                            page=returnPage
 
 
 
