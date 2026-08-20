@@ -112,6 +112,30 @@ foreach($notice as $row){
 
     }
 
+    // Discuz 的“回复通知”通常只保存 tid；根据通知人和时间找到对应回复。
+    if(!$pid && $tid && $row['type']=='post' && $row['authorid']){
+
+        $pid=intval(DB::result_first(
+
+            "SELECT pid
+             FROM pre_forum_post
+             WHERE tid=%d
+             AND authorid=%d
+             AND first=0
+             AND dateline<=%d
+             ORDER BY dateline DESC
+             LIMIT 1",
+
+            array(
+                $tid,
+                intval($row['authorid']),
+                intval($row['dateline'])
+            )
+
+        ));
+
+    }
+
 
     $list[]=array(
 
