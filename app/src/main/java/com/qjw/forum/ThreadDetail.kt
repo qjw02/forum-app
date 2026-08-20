@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.qjw.forum.component.ImageViewer
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -419,11 +420,10 @@ fun ThreadDetail(
 
 
                             Text(
-
-                                cleanDiscuzText(
-                                    threadData.thread.content
-                                )
-
+                                text = cleanDiscuzText(threadData.thread.content),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontSize = 19.sp,
+                                lineHeight = 30.sp
                             )
 
 
