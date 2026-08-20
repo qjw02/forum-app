@@ -116,6 +116,10 @@ fun ThreadDetail(
 
 
 
+    var replyPage by remember { mutableStateOf(1) }
+
+    var loadingMore by remember { mutableStateOf(false) }
+
     var replyText by remember {
 
         mutableStateOf("")
@@ -180,6 +184,7 @@ fun ThreadDetail(
 
                     data =
                         result.data
+                    replyPage = result.data?.replies?.page ?: 1
 
                 }else{
 
@@ -219,6 +224,33 @@ fun ThreadDetail(
 
 
 
+
+    fun loadMoreReplies(){
+        val current = data ?: return
+        if(loadingMore || current.replies.list.size >= current.replies.total) return
+
+        scope.launch{
+            loadingMore = true
+            try{
+                val nextPage = (current.replies.page ?: replyPage) + 1
+                val result = ApiClient.api.getThread(tid = tid, page = nextPage)
+                if(result.code == 0 && result.data != null){
+                    val next = result.data
+                    data = next.copy(
+                        replies = next.replies.copy(
+                            list = current.replies.list + next.replies.list
+                        )
+                    )
+                    replyPage = next.replies.page ?: nextPage
+                }else{
+                    replyMsg = result.message ?: "加载更多回复失败"
+                }
+            }catch(e:Exception){
+                replyMsg = e.message ?: "加载更多回复失败"
+            }
+            loadingMore = false
+        }
+    }
 
     LaunchedEffect(tid){
 
@@ -764,6 +796,25 @@ fun ThreadDetail(
 
 
 
+                        }
+
+                        item{
+                            if(threadData.replies.list.size < threadData.replies.total){
+                                Button(
+                                    onClick = { loadMoreReplies() },
+                                    enabled = !loadingMore,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp)
+                                ){
+                                    Text(
+                                        if(loadingMore) "加载中..."
+                                        else "加载更多回复（已显示 " +
+                                            threadData.replies.list.size + "/" +
+                                            threadData.replies.total + "）"
+                                    )
+                                }
+                            }
                         }
 
 
