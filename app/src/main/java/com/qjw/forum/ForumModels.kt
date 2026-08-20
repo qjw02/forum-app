@@ -157,7 +157,9 @@ data class Post(
 
     val views:Int,
 
-    val replies:Int
+    val replies:Int,
+
+    val displayorder:Int? = 0
 
 )
 
