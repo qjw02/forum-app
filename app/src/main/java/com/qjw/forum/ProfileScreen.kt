@@ -34,7 +34,6 @@ import coil.compose.AsyncImage
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
-    onCreatePost: () -> Unit,
     onReferral: () -> Unit
 ) {
     val uid = UserStore.getUid()
@@ -112,11 +111,11 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            Text("UID\\n" + user.uid)
-                            Text("积分\\n" + (user.credits ?: 0))
-                            Text("C币\\n" + (user.money ?: 0))
-                            Text("主题\\n" + (user.threads ?: 0))
-                            Text("帖子\\n" + (user.posts ?: 0))
+                            Text("UID\n" + user.uid)
+                            Text("积分\n" + (user.credits ?: 0))
+                            Text("C币\n" + (user.money ?: 0))
+                            Text("主题\n" + (user.threads ?: 0))
+                            Text("帖子\n" + (user.posts ?: 0))
                         }
                     }
                 }
@@ -139,8 +138,6 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(10.dp))
 
-                ProfileAction("📝 发布帖子", onCreatePost)
-                Spacer(Modifier.height(10.dp))
                 ProfileAction("📄 我的主题") {}
                 Spacer(Modifier.height(10.dp))
                 ProfileAction("💬 我的回复") {}
