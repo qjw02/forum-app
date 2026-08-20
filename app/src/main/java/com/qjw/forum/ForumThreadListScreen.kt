@@ -46,6 +46,15 @@ fun ForumThreadListScreen(
     fun fetchThreads(version: String?) {
         scope.launch {
             try {
+                val permission = ApiClient.api.checkPermission(
+                    fid = fid,
+                    uid = UserStore.getUid()
+                )
+                if (permission.code != 0 || permission.data?.allow != true) {
+                    message = permission.message ?: "当前用户组或积分无权访问该板块"
+                    return@launch
+                }
+
                 val result = ApiClient.api.getForumThreads(fid)
                 if (result.code == 0 && result.data != null) {
                     forumData = result.data
