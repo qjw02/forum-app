@@ -44,6 +44,11 @@ interface ApiService {
 
 
 
+    @GET("api/forum/search.php")
+    suspend fun searchThreads(
+        @Query("keyword") keyword: String
+    ): ForumSearchResponse
+
     @GET("api/forum/thread.php")
     suspend fun getThread(
         @Query("tid")
