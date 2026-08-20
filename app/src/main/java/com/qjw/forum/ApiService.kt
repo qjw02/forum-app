@@ -243,4 +243,20 @@ interface ApiService {
     @GET("api/user/notice.php")
     suspend fun getNotifications(): NotificationResponse
 
+
+    @GET("api/user/message.php")
+    suspend fun getPrivateMessages(): PrivateMessageResponse
+
+    @GET("api/user/message_detail.php")
+    suspend fun getPrivateMessageDetail(
+        @Query("plid") plid: String
+    ): PrivateMessageDetailResponse
+
+    @FormUrlEncoded
+    @POST("api/user/message_send.php")
+    suspend fun sendPrivateMessage(
+        @Field("uid") uid: String,
+        @Field("message") message: String
+    ): BaseResponse
+
 }
