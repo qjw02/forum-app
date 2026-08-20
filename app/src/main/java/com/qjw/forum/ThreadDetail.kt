@@ -353,7 +353,9 @@ fun ThreadDetail(
 
 
                             Text(
-                                "作者:${threadData.thread.author.username}"
+                                "作者：" + threadData.thread.author.username +
+                                    " · " +
+                                    (threadData.thread.author.group_name ?: "普通会员")
                             )
 
 
