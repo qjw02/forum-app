@@ -215,4 +215,15 @@ interface ApiService {
 
 
 
+
+
+    @GET("api/app/sync.php")
+    suspend fun getContentVersion(
+        @Query("scope")
+        scope: String,
+
+        @Query("fid")
+        fid: String? = null
+    ): ContentVersionResponse
+
 }
