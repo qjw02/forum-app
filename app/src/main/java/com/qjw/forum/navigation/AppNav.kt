@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.qjw.forum.*
 import com.qjw.forum.component.BottomBar
+import kotlinx.coroutines.delay
 
 
 
@@ -20,6 +21,15 @@ fun AppNav(){
 
         mutableStateOf("home")
 
+    }
+
+    val unreadCount = UnreadStore.totalCount
+
+    LaunchedEffect(UserStore.getToken()) {
+        while (true) {
+            UnreadStore.refresh()
+            delay(30_000)
+        }
     }
 
 
@@ -35,6 +45,8 @@ fun AppNav(){
 
                 current =
                     page.substringBefore("/"),
+
+                unreadCount = unreadCount,
 
 
 
