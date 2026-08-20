@@ -119,11 +119,18 @@ data class HomeData(
 
     val hot:List<Post>?,
 
-    val new:List<Post>?
+    val new:List<Post>?,
+
+    val announcement:Announcement? = null
 
 )
 
 
+
+data class Announcement(
+    val subject:String?,
+    val message:String?
+)
 
 data class Banner(
 
