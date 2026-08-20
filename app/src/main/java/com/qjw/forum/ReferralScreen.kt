@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,18 @@ fun ReferralScreen() {
     val domain = DomainManager.getDomain().trimEnd('/')
     val referralLink = domain + "/member.php?mod=register&referid=" + uid
     var copied by remember { mutableStateOf(false) }
+    var visitCount by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(uid) {
+        try {
+            val result = ApiClient.api.getReferralStats()
+            if (result.code == 0) {
+                visitCount = result.data?.visit_count ?: 0
+            }
+        } catch (_: Exception) {
+            // 统计接口不可用时保留推广链接和说明，不影响页面使用。
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -63,6 +76,33 @@ fun ReferralScreen() {
         )
 
         Spacer(Modifier.height(20.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF4F0FF)
+            ),
+            shape = RoundedCornerShape(18.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("推广数据", fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        text = if (visitCount == null) "正在读取访问记录..."
+                        else "已带来 " + visitCount + " 个推广 IP"
+                    )
+                }
+                Text("📈", style = MaterialTheme.typography.titleLarge)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
