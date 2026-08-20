@@ -34,7 +34,9 @@ import coil.compose.AsyncImage
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
-    onReferral: () -> Unit
+    onReferral: () -> Unit,
+    onMyThreads: () -> Unit,
+    onMyReplies: () -> Unit
 ) {
     val uid = UserStore.getUid()
     val cachedProfile = remember(uid) { ProfileCache.get(uid) }
@@ -138,9 +140,9 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(10.dp))
 
-                ProfileAction("📄 我的主题") {}
+                ProfileAction("📄 我的主题", onMyThreads)
                 Spacer(Modifier.height(10.dp))
-                ProfileAction("💬 我的回复") {}
+                ProfileAction("💬 我的回复", onMyReplies)
 
                 Spacer(Modifier.height(30.dp))
 
