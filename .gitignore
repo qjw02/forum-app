@@ -1,0 +1,12 @@
+# Local Android Studio configuration
+local.properties
+.idea/
+.gradle/
+
+# Build output
+build/
+**/build/
+
+# Signing keys
+*.jks
+*.keystore
