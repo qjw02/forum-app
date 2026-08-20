@@ -1,5 +1,8 @@
 package com.qjw.forum
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -25,11 +29,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 
 @Composable
 fun FriendsScreen(onBack: () -> Unit) {
@@ -119,7 +126,6 @@ fun FriendsScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(24.dp))
 
         Text("待处理好友申请", fontWeight = FontWeight.Bold)
-
         Spacer(Modifier.height(10.dp))
 
         if (loading) {
@@ -129,14 +135,13 @@ fun FriendsScreen(onBack: () -> Unit) {
         } else {
             requests.forEach { friend ->
                 FriendRequestCard(friend) { action("accept", friend.fuid) }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(8.dp))
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
         Text("我的好友（" + friends.size + "）", fontWeight = FontWeight.Bold)
-
         Spacer(Modifier.height(10.dp))
 
         if (!loading && friends.isEmpty()) {
@@ -145,54 +150,77 @@ fun FriendsScreen(onBack: () -> Unit) {
 
         friends.forEach { friend ->
             FriendCard(friend) { action("delete", friend.fuid) }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-private fun FriendIdentity(friend: FriendItem) {
-    Row {
-        AsyncImage(
-            model = DomainManager.getDomain().trimEnd('/') +
-                "/uc_server/avatar.php?uid=" + friend.fuid + "&size=middle",
-            contentDescription = null,
-            modifier = Modifier.size(48.dp)
-        )
+private fun FriendIdentity(friend: FriendItem, compact: Boolean = false) {
+    val nickname = friend.username ?: "用户 " + friend.fuid
+    val avatarUrl = DomainManager.getDomain().trimEnd('/') +
+        "/uc_server/avatar.php?uid=" + friend.fuid + "&size=middle"
 
-        Column(modifier = Modifier.padding(start = 12.dp)) {
-            Text(friend.username ?: "用户 " + friend.fuid, fontWeight = FontWeight.Bold)
-            Text("UID：" + friend.fuid)
-            Text("用户组：" + (friend.group_name ?: "普通会员"))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(if (compact) 40.dp else 48.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = nickname.take(1),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.Bold
+            )
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = nickname + "的头像",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        Column(modifier = Modifier.padding(start = 10.dp)) {
+            Text(nickname, fontWeight = FontWeight.Bold)
+            Text(
+                "UID " + friend.fuid + " · " + (friend.group_name ?: "普通会员"),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
 @Composable
-private fun FriendRequestCard(
-    friend: FriendItem,
-    onAccept: () -> Unit
-) {
+private fun FriendRequestCard(friend: FriendItem, onAccept: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            FriendIdentity(friend)
-            Spacer(Modifier.height(10.dp))
-            Button(onClick = onAccept) { Text("同意好友申请") }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FriendIdentity(friend, compact = true)
+            Button(onClick = onAccept) { Text("同意") }
         }
     }
 }
 
 @Composable
-private fun FriendCard(
-    friend: FriendItem,
-    onDelete: () -> Unit
-) {
+private fun FriendCard(friend: FriendItem, onDelete: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(friend.username ?: "用户 " + friend.fuid, fontWeight = FontWeight.Bold)
-            Text("UID：" + friend.fuid)
-            Spacer(Modifier.height(10.dp))
-            OutlinedButton(onClick = onDelete) { Text("删除好友") }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FriendIdentity(friend, compact = true)
+            OutlinedButton(onClick = onDelete) { Text("删除") }
         }
     }
 }
