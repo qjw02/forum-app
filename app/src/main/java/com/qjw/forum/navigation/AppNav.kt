@@ -261,18 +261,6 @@ fun AppNav(){
                         },
 
 
-
-                        onCreatePost = {
-
-
-
-                            page="create"
-
-
-
-                        },
-
-
                         onReferral = {
 
 
