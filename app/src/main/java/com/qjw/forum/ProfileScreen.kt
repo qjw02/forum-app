@@ -35,7 +35,8 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onReferral: () -> Unit,
     onMyThreads: () -> Unit,
-    onMyReplies: () -> Unit
+    onMyReplies: () -> Unit,
+    onFriends: () -> Unit
 ) {
     val uid = UserStore.getUid()
     val cachedProfile = remember(uid) { ProfileCache.get(uid) }
@@ -142,6 +143,8 @@ fun ProfileScreen(
                 ProfileAction("📄 我的主题", onMyThreads)
                 Spacer(Modifier.height(10.dp))
                 ProfileAction("💬 我的回复", onMyReplies)
+                Spacer(Modifier.height(10.dp))
+                ProfileAction("👥 好友管理", onFriends)
 
                 Spacer(Modifier.height(30.dp))
 
