@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -167,10 +168,18 @@ private fun ConversationCard(
             .clickable { onOpenChat(conversation.plid) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = conversation.subject?.ifBlank { "私信" } ?: "私信",
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = conversation.subject?.ifBlank { "私信" } ?: "私信",
+                    fontWeight = FontWeight.Bold
+                )
+                if ((conversation.unread ?: 0) > 0) {
+                    Badge()
+                }
+            }
             if (!conversation.message.isNullOrBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -212,10 +221,18 @@ private fun NotificationCard(
             )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = notification.type ?: "论坛通知",
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = notification.type ?: "论坛通知",
+                    fontWeight = FontWeight.Bold
+                )
+                if ((notification.isNew ?: 0) > 0) {
+                    Badge()
+                }
+            }
 
             if (!notification.note.isNullOrBlank()) {
                 Spacer(Modifier.height(8.dp))
