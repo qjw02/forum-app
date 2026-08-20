@@ -226,4 +226,17 @@ interface ApiService {
         fid: String? = null
     ): ContentVersionResponse
 
+
+    @GET("api/user/threads.php")
+    suspend fun getMyThreads(
+        @Query("page") page: Int = 1,
+        @Query("page_size") pageSize: Int = 20
+    ): MyThreadsResponse
+
+    @GET("api/user/replies.php")
+    suspend fun getMyReplies(
+        @Query("page") page: Int = 1,
+        @Query("page_size") pageSize: Int = 20
+    ): MyRepliesResponse
+
 }
