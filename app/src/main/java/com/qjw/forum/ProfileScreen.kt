@@ -112,16 +112,11 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            Text("UID
-" + user.uid)
-                            Text("积分
-" + (user.credits ?: 0))
-                            Text("C币
-" + (user.money ?: 0))
-                            Text("主题
-" + (user.threads ?: 0))
-                            Text("帖子
-" + (user.posts ?: 0))
+                            Text("UID\\n" + user.uid)
+                            Text("积分\\n" + (user.credits ?: 0))
+                            Text("C币\\n" + (user.money ?: 0))
+                            Text("主题\\n" + (user.threads ?: 0))
+                            Text("帖子\\n" + (user.posts ?: 0))
                         }
                     }
                 }
