@@ -555,3 +555,13 @@ data class ReferralStatsResponse(
 data class ReferralStatsData(
     val visit_count: Int?
 )
+
+
+// ===============================
+// 主题搜索
+// ===============================
+data class ForumSearchResponse(
+    val code: Int,
+    val message: String?,
+    val data: List<Post>?
+)
