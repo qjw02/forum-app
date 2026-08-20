@@ -12,7 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.qjw.forum.component.ImageViewer
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+
+fun formatForumTime(timestamp: Long?): String {
+    if (timestamp == null || timestamp <= 0) return ""
+    return SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        .format(Date(timestamp * 1000))
+}
 
 fun cleanDiscuzText(text:String):String{
 
@@ -394,7 +403,11 @@ fun ThreadDetail(
                                 )
                             }
 
-
+                            Text(
+                                text = "发表于 " + formatForumTime(threadData.thread.dateline),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
 
                             Spacer(
                                 Modifier.height(10.dp)
@@ -778,7 +791,11 @@ fun ThreadDetail(
                                         )
                                     }
 
-
+                                    Text(
+                                        text = "回复于 " + formatForumTime(reply.dateline),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
 
                                     Text(
 
