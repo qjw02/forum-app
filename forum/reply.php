@@ -11,9 +11,6 @@ require_once '/www/wwwroot/qq/wwwroot/source/function/function_forum.php';
 C::app()->init();
 
 
-require_once '/www/wwwroot/qq/wwwroot/api/common/sign.php';
-
-
 header('Content-Type: application/json; charset=utf-8');
 
 
@@ -22,16 +19,7 @@ header('Content-Type: application/json; charset=utf-8');
 if(!check_api_sign()){
 
     echo json_encode([
-        'code'=>403,
-        'message'=>'签名错误'
-    ],JSON_UNESCAPED_UNICODE);
-
-    exit;
-
-}
-
-
-// Token
+   // Token
 
 $token=$_SERVER['HTTP_X_TOKEN'] ?? '';
 
