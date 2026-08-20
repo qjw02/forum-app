@@ -214,7 +214,7 @@ fun AppNav(){
 
 
                     MessageScreen(
-                        onOpenThread = { tid -> page="thread/$tid" },
+                        onOpenThread = { tid -> page="thread/$tid?back=message" },
                         onOpenChat = { plid -> page="chat/$plid" }
                     )
 
@@ -601,11 +601,19 @@ fun AppNav(){
 
 
 
-                    val tid =
+                    val threadRoute =
 
                         page.removePrefix(
                             "thread/"
                         )
+
+                    val tid =
+
+                        threadRoute.substringBefore("?")
+
+                    val returnToMessage =
+
+                        threadRoute.contains("back=message")
 
 
 
@@ -633,7 +641,7 @@ fun AppNav(){
 
 
 
-                            page="home"
+                            page=if(returnToMessage) "message" else "home"
 
 
 
