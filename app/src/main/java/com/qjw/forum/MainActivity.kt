@@ -27,6 +27,8 @@ class MainActivity : ComponentActivity(){
 
         ContentCache.init(this)
 
+        ProfileCache.init(this)
+
 
 
         // 初始化动态域名管理
