@@ -36,6 +36,21 @@ function avatar_url($uid){
 
 }
 
+function group_name($uid){
+
+    return DB::result_first(
+
+        "SELECT g.grouptitle
+         FROM pre_common_member m
+         LEFT JOIN pre_common_usergroup g ON g.groupid=m.groupid
+         WHERE m.uid=%d",
+
+        array($uid)
+
+    );
+
+}
+
 
 
 
@@ -589,7 +604,9 @@ foreach($posts as $row){
 
             'username'=>$row['author'],
 
-            'avatar'=>avatar_url($row['authorid'])
+            'avatar'=>avatar_url($row['authorid']),
+
+            'group_name'=>group_name($row['authorid'])
 
 
         ),
@@ -739,7 +756,9 @@ echo json_encode([
 
         'username'=>$thread['author'],
 
-        'avatar'=>avatar_url($thread['authorid'])
+        'avatar'=>avatar_url($thread['authorid']),
+
+        'group_name'=>group_name($thread['authorid'])
 
 
     ),
