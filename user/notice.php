@@ -90,6 +90,22 @@ $list=array();
 
 foreach($notice as $row){
 
+    // 统一解析通知关联的主题 ID，供 APP 点击后打开主题详情
+    $tid=0;
+
+    if($row['from_idtype']=='tid'){
+
+        $tid=intval($row['from_id']);
+
+    }elseif($row['from_idtype']=='pid'){
+
+        $tid=intval(DB::result_first(
+            "SELECT tid FROM pre_forum_post WHERE pid=%d",
+            array(intval($row['from_id']))
+        ));
+
+    }
+
 
     $list[]=array(
 
@@ -114,6 +130,8 @@ foreach($notice as $row){
         'from_id'=>$row['from_id'],
 
         'from_idtype'=>$row['from_idtype'],
+
+        'tid'=>$tid,
 
         'category'=>$row['category']
 
