@@ -226,7 +226,7 @@ private fun NotificationCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = notification.type ?: "论坛通知",
+                    text = notificationTitle(notification),
                     fontWeight = FontWeight.Bold
                 )
                 if ((notification.isNew ?: 0) > 0) {
@@ -251,6 +251,17 @@ private fun NotificationCard(
                 )
             }
         }
+    }
+}
+
+private fun notificationTitle(notification: NotificationItem): String {
+    val username = notification.author?.username.orEmpty()
+
+    return when (notification.type) {
+        "post" -> if (username.isBlank()) "有人回复了你的帖子" else username + " 回复了你的帖子"
+        "friend" -> if (username.isBlank()) "好友提醒" else username + " 添加了你为好友"
+        "system" -> "系统通知"
+        else -> notification.type ?: "论坛通知"
     }
 }
 
