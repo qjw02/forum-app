@@ -450,6 +450,7 @@ fun ThreadDetail(
 
                                                 if(result.code == 0){
 
+                                                    ProfileCache.clear()
                                                     loadThread()
 
                                                 }
@@ -590,6 +591,7 @@ fun ThreadDetail(
                                             if(result.code==0){
 
 
+                                                ProfileCache.clear()
                                                 replyText=""
 
 
