@@ -23,17 +23,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 fun MessageScreen(
     onOpenThread: (String, String?) -> Unit,
     onOpenChat: (String) -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) }
     var loading by remember { mutableStateOf(UserStore.isLogin()) }
     var error by remember { mutableStateOf("") }
@@ -47,10 +50,10 @@ fun MessageScreen(
 
         try {
             if (selectedTab == 0) {
-                val result = ApiClient.api.getNotifications(read = 1)
+                val result = ApiClient.api.getNotifications()
                 if (result.code == 0) {
                     notifications = result.data?.list.orEmpty()
-                    UnreadStore.updateNotifications(0)
+                    UnreadStore.updateNotifications(result.data?.unread ?: 0)
                 } else {
                     error = result.message ?: "加载消息失败"
                 }
@@ -67,6 +70,22 @@ fun MessageScreen(
             error = e.message ?: "网络错误"
         } finally {
             loading = false
+        }
+    }
+
+    fun markRead(notification: NotificationItem) {
+        if ((notification.isNew ?: 0) <= 0) return
+
+        notifications = notifications.map {
+            if (it.id == notification.id) it.copy(isNew = 0) else it
+        }
+        UnreadStore.updateNotifications((UnreadStore.notificationCount - 1).coerceAtLeast(0))
+
+        scope.launch {
+            try {
+                ApiClient.api.getNotifications(readId = notification.id)
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -121,7 +140,7 @@ fun MessageScreen(
             selectedTab == 1 && conversations.isEmpty() -> EmptyMessage("暂无私信会话")
 
             selectedTab == 0 -> notifications.forEach { notification ->
-                NotificationCard(notification, onOpenThread)
+                NotificationCard(notification, onOpenThread) { markRead(it) }
                 Spacer(Modifier.height(10.dp))
             }
 
@@ -203,7 +222,8 @@ private fun ConversationCard(
 @Composable
 private fun NotificationCard(
     notification: NotificationItem,
-    onOpenThread: (String, String?) -> Unit
+    onOpenThread: (String, String?) -> Unit,
+    onRead: (NotificationItem) -> Unit
 ) {
     val threadId = notification.tid
         ?.takeIf { it.isNotBlank() && it != "0" }
@@ -212,13 +232,12 @@ private fun NotificationCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
+            .clickable {
+                onRead(notification)
                 if (threadId != null) {
-                    Modifier.clickable { onOpenThread(threadId, notification.pid) }
-                } else {
-                    Modifier
+                    onOpenThread(threadId, notification.pid)
                 }
-            )
+            }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
