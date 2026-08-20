@@ -107,6 +107,13 @@ fun ProfileScreen(
                             style = MaterialTheme.typography.titleLarge
                         )
 
+                        Spacer(Modifier.height(4.dp))
+
+                        Text(
+                            text = "用户组：" + (user.group_name ?: "普通会员"),
+                            color = MaterialTheme.colorScheme.error
+                        )
+
                         Spacer(Modifier.height(15.dp))
 
                         Row(
