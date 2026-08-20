@@ -439,6 +439,7 @@ data class NotificationResponse(
 
 data class NotificationData(
     val count: Int?,
+    val unread: Int?,
     val list: List<NotificationItem>?
 )
 
@@ -448,7 +449,8 @@ data class NotificationItem(
     val note: String?,
     val from_id: String?,
     val from_idtype: String?,
-    val tid: String?
+    val tid: String?,
+    val pid: String?
 )
 
 
