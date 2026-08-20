@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -71,11 +72,12 @@ fun MyContentScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text(
-            text = "‹ 返回",
-            modifier = Modifier.clickable(onClick = onBack),
-            color = MaterialTheme.colorScheme.primary
-        )
+        Button(
+            modifier = Modifier.padding(bottom = 4.dp),
+            onClick = onBack
+        ) {
+            Text("返回")
+        }
 
         Spacer(Modifier.height(14.dp))
 
