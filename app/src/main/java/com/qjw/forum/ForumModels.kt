@@ -450,11 +450,17 @@ data class NotificationItem(
     @SerializedName("new")
     val isNew: Int?,
     val type: String?,
+    val author: NotificationAuthor?,
     val note: String?,
     val from_id: String?,
     val from_idtype: String?,
     val tid: String?,
     val pid: String?
+)
+
+data class NotificationAuthor(
+    val uid: String?,
+    val username: String?
 )
 
 
