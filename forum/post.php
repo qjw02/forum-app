@@ -67,6 +67,8 @@ $fid=intval($_POST['fid'] ?? 0);
 $subject=trim($_POST['subject'] ?? '');
 
 $message=trim($_POST['message'] ?? '');
+$contact=trim($_POST['contact'] ?? '');
+$price=intval($_POST['price'] ?? 0);
 
 
 
@@ -136,6 +138,26 @@ if(!$forum){
 
     exit;
 
+}
+
+/* 只有“高级报告”板块允许出售联系方式。 */
+if($contact !== '' || $price > 0){
+
+    if($forum['name'] !== '高级报告'){
+        echo json_encode([
+            'code'=>403,
+            'message'=>'只有高级报告板块可以出售联系方式'
+        ],JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if($contact === '' || $price <= 0){
+        echo json_encode([
+            'code'=>400,
+            'message'=>'请填写联系方式和有效的 C币价格'
+        ],JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 }
 
 
@@ -321,6 +343,30 @@ if(!$newpid){
 
 
 
+
+
+/* 保存收费联系方式：复用主题详情和购买接口的现有数据表。 */
+if($contact !== '' && $price > 0){
+
+    DB::insert(
+        'forum_typeoptionvar',
+        array(
+            'tid'=>$tid,
+            'optionid'=>7,
+            'value'=>$contact
+        )
+    );
+
+    DB::insert(
+        'app_thread_field_price',
+        array(
+            'tid'=>$tid,
+            'optionid'=>7,
+            'price'=>$price,
+            'dateline'=>TIMESTAMP
+        )
+    );
+}
 
 
 /*
