@@ -50,6 +50,12 @@ fun cleanDiscuzText(text:String):String{
 
         .replace("</div>","")
 
+        // 清理 Discuz 编辑器遗留的 font、span 等 HTML 标签
+        .replace(
+            Regex("<[^>]+>"),
+            ""
+        )
+
         .replace("<br />","\n")
         .replace("<br/>","\n")
         .replace("<br>","\n")
