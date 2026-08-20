@@ -187,8 +187,9 @@ private fun NotificationCard(
     notification: NotificationItem,
     onOpenThread: (String) -> Unit
 ) {
-    val threadId = notification.from_id
-        ?.takeIf { notification.from_idtype == "tid" }
+    val threadId = notification.tid
+        ?.takeIf { it.isNotBlank() && it != "0" }
+        ?: notification.from_id?.takeIf { notification.from_idtype == "tid" }
 
     Card(
         modifier = Modifier
