@@ -394,20 +394,23 @@ fun ThreadDetail(
 
 
                             Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ){
-                                Text("作者：" + threadData.thread.author.username + " · ")
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("作者：" + threadData.thread.author.username + " · ")
+                                    Text(
+                                        text = threadData.thread.author.group_name ?: "普通会员",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                                 Text(
-                                    text = threadData.thread.author.group_name ?: "普通会员",
-                                    color = MaterialTheme.colorScheme.error
+                                    text = "发表于 " + formatForumTime(threadData.thread.dateline),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-
-                            Text(
-                                text = "发表于 " + formatForumTime(threadData.thread.dateline),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
 
                             Spacer(
                                 Modifier.height(10.dp)
@@ -782,20 +785,23 @@ fun ThreadDetail(
 
 
                                     Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ){
-                                        Text(reply.author.username + " · ")
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(reply.author.username + " · ")
+                                            Text(
+                                                text = reply.author.group_name ?: "普通会员",
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                         Text(
-                                            text = reply.author.group_name ?: "普通会员",
-                                            color = MaterialTheme.colorScheme.error
+                                            text = "回复于 " + formatForumTime(reply.dateline),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
-
-                                    Text(
-                                        text = "回复于 " + formatForumTime(reply.dateline),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
 
                                     Text(
 
