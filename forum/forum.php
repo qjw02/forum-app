@@ -67,13 +67,14 @@ tid,
 subject,
 author,
 views,
-replies
+replies,
+displayorder
 
 FROM pre_forum_thread
 
 WHERE fid=%d
 
-ORDER BY dateline DESC
+ORDER BY displayorder DESC,dateline DESC
 
 LIMIT 50",
 
