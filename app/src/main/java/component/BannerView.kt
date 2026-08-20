@@ -1,250 +1,121 @@
 package com.qjw.forum.component
 
-
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.qjw.forum.Banner
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BannerView(
+    banners: List<Banner>,
+    onClick: (String) -> Unit = {}
+) {
+    val items = banners.take(5)
+    if (items.isEmpty()) return
 
-    banners:List<Banner>,
-
-    onClick:(String)->Unit = {}
-
-){
-
-
-    if(banners.isEmpty()){
-
-        return
-
-    }
-
-
-
-    val pagerState = rememberPagerState(
-
-        initialPage = 0,
-
-        pageCount = {
-
-            banners.take(5).size
-
-        }
-
-    )
-
-
-
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { items.size })
     val scope = rememberCoroutineScope()
 
-
-
-    LaunchedEffect(Unit){
-
-        while(true){
-
+    LaunchedEffect(items.size) {
+        if (items.size <= 1) return@LaunchedEffect
+        while (true) {
             delay(4000)
-
-
-            val next =
-                (pagerState.currentPage + 1) %
-                        banners.take(5).size
-
-
-            scope.launch{
-
-                pagerState.animateScrollToPage(next)
-
+            scope.launch {
+                pagerState.animateScrollToPage((pagerState.currentPage + 1) % items.size)
             }
-
-
         }
-
     }
 
-
-
-
-    Column(
-
-        modifier =
-            Modifier.fillMaxWidth()
-
-    ){
-
-
-
+    Column(modifier = Modifier.fillMaxWidth()) {
         HorizontalPager(
-
             state = pagerState,
-
-
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-
-        ){ page ->
-
-
-
-            val banner =
-                banners.take(5)[page]
-
-
-
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(170.dp)
+        ) { page ->
+            val banner = items[page]
             Card(
-
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = 12.dp,
-                            vertical = 6.dp
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .clickable { banner.tid?.let(onClick) },
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "精华推荐",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                        .clickable{
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = banner.subject ?: "QJWForum",
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 3
+                        )
+                    }
 
-                            banner.tid?.let {
-
-                                onClick(it)
-
-                            }
-
-                        },
-
-
-                shape =
-                    RoundedCornerShape(14.dp)
-
-            ){
-
-
-
-                Column(
-
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(20.dp)
-
-                ){
-
-
-
-                    Text(
-
-                        text =
-                            banner.subject
-                                ?: "QJWForum",
-
-
-                        style =
-                            MaterialTheme
-                                .typography
-                                .titleLarge
-
-
-                    )
-
-
-
-                    Spacer(
-
-                        Modifier.height(10.dp)
-
-                    )
-
-
-
-                    Text(
-
-                        text =
-                            "推荐帖子",
-
-
-                        style =
-                            MaterialTheme
-                                .typography
-                                .bodyMedium
-
-                    )
-
-
-
+                    if (!banner.image.isNullOrBlank()) {
+                        Spacer(Modifier.width(12.dp))
+                        AsyncImage(
+                            model = banner.image,
+                            contentDescription = banner.subject,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .width(125.dp)
+                                .fillMaxHeight()
+                        )
+                    }
                 }
-
-
-
             }
-
-
-
         }
-
-
-
-
 
         Row(
-
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = 4.dp
-                    ),
-
-            horizontalArrangement =
-                Arrangement.Center
-
-        ){
-
-
-
-            repeat(
-                banners.take(5).size
-            ){ index ->
-
-
-
-                Text(
-
-                    text =
-                        if(index == pagerState.currentPage)
-                            "●"
-                        else
-                            "○"
-
-                )
-
-
-
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(items.size) { index ->
+                Text(if (index == pagerState.currentPage) "●" else "○")
             }
-
-
-
         }
-
-
-
-
     }
-
-
-
 }
