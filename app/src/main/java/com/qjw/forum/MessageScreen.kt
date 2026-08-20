@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun MessageScreen(
-    onOpenThread: (String) -> Unit,
+    onOpenThread: (String, String?) -> Unit,
     onOpenChat: (String) -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -49,6 +49,7 @@ fun MessageScreen(
                 val result = ApiClient.api.getNotifications()
                 if (result.code == 0) {
                     notifications = result.data?.list.orEmpty()
+                    UnreadStore.updateNotifications(result.data?.unread ?: 0)
                 } else {
                     error = result.message ?: "加载消息失败"
                 }
@@ -56,6 +57,7 @@ fun MessageScreen(
                 val result = ApiClient.api.getPrivateMessages()
                 if (result.code == 0) {
                     conversations = result.data?.list.orEmpty()
+                    UnreadStore.updatePrivateMessages(result.data?.unread ?: 0)
                 } else {
                     error = result.message ?: "加载私信失败"
                 }
@@ -86,8 +88,15 @@ fun MessageScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            MessageTab("通知", selectedTab == 0) { selectedTab = 0 }
-            MessageTab("私信", selectedTab == 1) { selectedTab = 1 }
+            MessageTab(
+                "通知" + unreadText(UnreadStore.notificationCount),
+                selectedTab == 0
+            ) { selectedTab = 0 }
+
+            MessageTab(
+                "私信" + unreadText(UnreadStore.privateMessageCount),
+                selectedTab == 1
+            ) { selectedTab = 1 }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -185,7 +194,7 @@ private fun ConversationCard(
 @Composable
 private fun NotificationCard(
     notification: NotificationItem,
-    onOpenThread: (String) -> Unit
+    onOpenThread: (String, String?) -> Unit
 ) {
     val threadId = notification.tid
         ?.takeIf { it.isNotBlank() && it != "0" }
@@ -196,7 +205,7 @@ private fun NotificationCard(
             .fillMaxWidth()
             .then(
                 if (threadId != null) {
-                    Modifier.clickable { onOpenThread(threadId) }
+                    Modifier.clickable { onOpenThread(threadId, notification.pid) }
                 } else {
                     Modifier
                 }
@@ -226,6 +235,10 @@ private fun NotificationCard(
             }
         }
     }
+}
+
+private fun unreadText(count: Int): String {
+    return if (count > 0) "（" + (if (count > 99) "99+" else count) + "）" else ""
 }
 
 @Composable
