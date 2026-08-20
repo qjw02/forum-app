@@ -42,24 +42,18 @@ object DomainManager {
 
 
 
-    fun getDomain():String{
+    fun getDomain(): String {
+        val cachedDomain = context
+            ?.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            ?.getString(KEY_DOMAIN, "")
+            .orEmpty()
+            .trim()
+            .trimEnd('/')
 
-        return context
-            ?.getSharedPreferences(
-                PREF,
-                Context.MODE_PRIVATE
-            )
-            ?.getString(
-                KEY_DOMAIN,
-                ""
-            )
-            ?: ""
-
+        return cachedDomain.ifEmpty {
+            ApiConfig.baseUrl.trim().trimEnd('/')
+        }
     }
-
-
-
-
 
 
     private fun saveDomain(url:String){
