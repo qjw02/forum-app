@@ -270,6 +270,15 @@ fun AppNav(){
 
 
 
+                        },
+
+
+                        onReferral = {
+
+
+                            page="referral"
+
+
                         }
 
 
