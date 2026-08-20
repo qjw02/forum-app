@@ -210,6 +210,8 @@ data class ThreadInfo(
 
     val images:List<String>,
 
+    val dateline:Long? = null,
+
     val author:Author
 
 )
@@ -257,6 +259,8 @@ data class Reply(
     val pid:String,
 
     val message:String,
+
+    val dateline:Long? = null,
 
     val author:Author
 
