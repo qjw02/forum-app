@@ -1,6 +1,6 @@
-import com.google.gson.annotations.SerializedName
-
 package com.qjw.forum
+
+import com.google.gson.annotations.SerializedName
 
 
 // ===============================
