@@ -363,8 +363,8 @@ fun CreatePost(
                                 finalMessage +=
 
                                     "\n\n[img]" +
-                                            ApiConfig.baseUrl +
-                                            "data/attachment/forum/" +
+                                            DomainManager.getDomain().trimEnd('/') +
+                                            "/data/attachment/forum/" +
                                             upload.data?.attachment +
                                             "[/img]"
 
