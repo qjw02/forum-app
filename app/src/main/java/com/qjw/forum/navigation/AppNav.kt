@@ -314,15 +314,7 @@ fun AppNav(){
 
                             page="register"
 
-                        },
-
-                        onForgotPassword = {
-
-                            page="forgot"
-
-                        }
-
-                    )
+                        })
 
                 }
 
@@ -657,15 +649,7 @@ fun AppNav(){
 
                             page="register"
 
-                        },
-
-                        onForgotPassword = {
-
-                            page="forgot"
-
-                        }
-
-                    )
+                        })
 
                 }
 
