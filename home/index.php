@@ -90,6 +90,7 @@ $new = DB::fetch_all(
      ORDER BY dateline DESC
      LIMIT 20"
 );
+$new = add_cover_images($new);
 
 echo json_encode(array(
     'code' => 0,
