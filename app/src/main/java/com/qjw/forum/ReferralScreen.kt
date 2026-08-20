@@ -108,6 +108,30 @@ fun ReferralScreen() {
         Spacer(Modifier.height(24.dp))
 
         Text(
+            text = "推广奖励",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        RewardCard(
+            title = "好友访问站点",
+            description = "如果您的朋友通过下面链接访问站点，您将获得积分奖励",
+            rewards = "金钱 +10    推广IP点 +1"
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        RewardCard(
+            title = "好友注册成为会员",
+            description = "如果您的朋友不但访问并且注册成为会员，您将再获得积分奖励",
+            rewards = "金钱 +50    贡献 +1    C币 +10"
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        Text(
             text = "邀请方式",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
@@ -117,7 +141,7 @@ fun ReferralScreen() {
 
         ReferralStep("1", "复制链接", "复制你的专属链接并发送给好友。")
         ReferralStep("2", "好友注册", "好友通过链接完成论坛注册。")
-        ReferralStep("3", "获得奖励", "符合论坛推广规则后，奖励将自动发放。")
+        ReferralStep("3", "获得奖励", "奖励由论坛后台按推广规则自动发放。")
 
         Spacer(Modifier.height(24.dp))
 
@@ -146,6 +170,41 @@ fun ReferralScreen() {
             }
         ) {
             Text("再次复制链接")
+        }
+    }
+}
+
+@Composable
+private fun RewardCard(
+    title: String,
+    description: String,
+    rewards: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF4F0FF)
+        ),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4E368D)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = rewards,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4E368D)
+            )
         }
     }
 }
