@@ -42,9 +42,10 @@ if($action=='list'){
 
     $friends=DB::fetch_all(
 
-        "SELECT f.fuid,m.username
+        "SELECT f.fuid,m.username,g.grouptitle AS group_name
          FROM pre_home_friend f
          LEFT JOIN pre_common_member m ON m.uid=f.fuid
+         LEFT JOIN pre_common_usergroup g ON g.groupid=m.groupid
          WHERE f.uid=%d
          ORDER BY f.dateline DESC",
 
@@ -54,9 +55,10 @@ if($action=='list'){
 
     $requests=DB::fetch_all(
 
-        "SELECT r.fuid,m.username
+        "SELECT r.fuid,m.username,g.grouptitle AS group_name
          FROM pre_home_friend_request r
          LEFT JOIN pre_common_member m ON m.uid=r.fuid
+         LEFT JOIN pre_common_usergroup g ON g.groupid=m.groupid
          WHERE r.uid=%d
          ORDER BY r.dateline DESC",
 
