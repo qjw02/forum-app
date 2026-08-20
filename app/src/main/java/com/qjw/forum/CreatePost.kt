@@ -50,6 +50,7 @@ fun CreatePost(
     var contact by remember { mutableStateOf("") }
     var priceText by remember { mutableStateOf("10") }
     var resultText by remember { mutableStateOf("") }
+    var publishing by remember { mutableStateOf(false) }
     var showForumMenu by remember { mutableStateOf(false) }
     val images = remember { mutableStateListOf<Uri>() }
     val scope = rememberCoroutineScope()
@@ -189,6 +190,7 @@ fun CreatePost(
 
         Button(
             modifier = Modifier.fillMaxWidth(),
+            enabled = !publishing,
             onClick = {
                 val forum = selectedForum
                 if (forum == null) {
@@ -201,9 +203,11 @@ fun CreatePost(
                 }
 
                 scope.launch {
+                    publishing = true
                     try {
                         var finalMessage = message
-                        images.forEach { uri ->
+                        images.forEachIndexed { index, uri ->
+                            resultText = "正在上传图片 " + (index + 1) + "/" + images.size + "..."
                             val file = File(context.cacheDir, "upload_" + System.currentTimeMillis() + ".jpg")
                             context.contentResolver.openInputStream(uri)?.use { input ->
                                 file.outputStream().use { output -> input.copyTo(output) }
@@ -222,6 +226,7 @@ fun CreatePost(
                             }
                         }
 
+                        resultText = "正在发布，请稍候..."
                         val result = ApiClient.api.createPost(
                             fid = forum.fid.toString(),
                             subject = subject,
@@ -237,7 +242,13 @@ fun CreatePost(
                             resultText = result.message ?: "发布失败"
                         }
                     } catch (e: Exception) {
-                        resultText = e.message ?: "发布失败"
+                        resultText = if (e.message?.contains("timeout", ignoreCase = true) == true) {
+                            "发布超时，请检查网络后重试"
+                        } else {
+                            e.message ?: "发布失败"
+                        }
+                    } finally {
+                        publishing = false
                     }
                 }
             }
