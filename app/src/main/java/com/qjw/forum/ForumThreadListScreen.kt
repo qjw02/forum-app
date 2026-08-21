@@ -41,6 +41,8 @@ fun ForumThreadListScreen(
     var forumData by remember(fid) { mutableStateOf(cachedForum?.data) }
     var loading by remember(fid) { mutableStateOf(cachedForum == null) }
     var message by remember(fid) { mutableStateOf("") }
+    var canCreatePost by remember(fid) { mutableStateOf(UserStore.isLogin()) }
+    var permissionNote by remember(fid) { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     fun fetchThreads(version: String?) {
@@ -81,6 +83,31 @@ fun ForumThreadListScreen(
     LaunchedEffect(fid) {
         scope.launch {
             try {
+                val permission = ApiClient.api.checkPermission(
+                    fid = fid,
+                    uid = UserStore.getUid()
+                )
+                if (permission.code == 0 && permission.data != null) {
+                    canCreatePost = permission.data.allowPost == true
+                    permissionNote = buildString {
+                        append(permission.data.groupName ?: "当前用户组")
+                        append(" · 积分 ")
+                        append(permission.data.credits)
+                        if (!canCreatePost) append(" · 当前用户组不能发帖")
+                    }
+                } else {
+                    canCreatePost = false
+                    permissionNote = permission.message ?: "当前用户组不能发帖"
+                }
+            } catch (_: Exception) {
+                // 兼容旧服务器：登录用户仍可进入发布页，最终由服务器验证权限。
+            }
+        }
+    }
+
+    LaunchedEffect(fid) {
+        scope.launch {
+            try {
                 val sync = ApiClient.api.getContentVersion("forum", fid)
                 val version = sync.data?.version
 
@@ -114,9 +141,21 @@ fun ForumThreadListScreen(
                 Text("返回")
             }
 
-            Button(onClick = { onCreatePost(fid) }) {
-                Text("＋发布主题")
+            Button(
+                enabled = canCreatePost,
+                onClick = { onCreatePost(fid) }
+            ) {
+                Text(if (canCreatePost) "＋发布主题" else "当前不能发帖")
             }
+        }
+
+        if (permissionNote.isNotBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = permissionNote,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         Spacer(Modifier.height(12.dp))
