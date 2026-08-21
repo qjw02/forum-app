@@ -83,7 +83,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("邮箱（可选）") },
+            label = { Text("邮箱") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -98,8 +98,11 @@ fun RegisterScreen(
                     username.trim().isEmpty() || password.isEmpty() -> {
                         message = "用户名和密码不能为空"
                     }
-                    password != confirmPassword -> {
-                        message = "两次输入的密码不一致"
+                    password.length < 6 -> {
+                        message = "密码至少需要 6 位"
+                    }
+                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> {
+                        message = "请输入有效的邮箱地址"
                     }
                     else -> {
                         scope.launch {
@@ -119,7 +122,7 @@ fun RegisterScreen(
                                     message = result.message ?: "注册失败"
                                 }
                             } catch (e: Exception) {
-                                message = e.message ?: "网络错误"
+                                message = "注册请求失败，请检查网络或稍后重试"
                             } finally {
                                 submitting = false
                             }
