@@ -50,6 +50,15 @@ function forum_thread_cover($tid) {
         return forum_api_site_url() . '/' . ltrim($image, '/');
     }
 
+    // 通过 Discuz 附件入口读取缩略图，不直接访问旧附件分表。
+    $aid = DB::result_first(
+        "SELECT aid FROM pre_forum_attachment WHERE tid=%d ORDER BY aid ASC",
+        array($tid)
+    );
+    if ($aid) {
+        return forum_api_site_url() . '/forum.php?mod=attachment&aid=' . intval($aid);
+    }
+
     return '';
 }
 
