@@ -150,6 +150,49 @@ function parse_images($message){
  * Discuz BBCode解析
  */
 
+function resolve_category_value($value,$choices){
+
+    $value=trim(strval($value));
+    if($value==='' || !$choices){
+        return $value;
+    }
+
+    $choice_map=@unserialize($choices);
+
+    if(!is_array($choice_map)){
+        $choice_map=array();
+        $lines=preg_split('/\r\n|\r|\n/',trim($choices));
+        $number=1;
+        foreach($lines as $line){
+            $line=trim($line);
+            if($line===''){
+                continue;
+            }
+            if(strpos($line,'=')!==false){
+                list($key,$label)=explode('=',$line,2);
+                $choice_map[trim($key)]=trim($label);
+            }else{
+                $choice_map[strval($number)]=$line;
+                $number++;
+            }
+        }
+    }
+
+    $values=preg_split('/[\t,]+/',$value);
+    $labels=array();
+
+    foreach($values as $selected){
+        $selected=trim($selected);
+        if($selected===''){
+            continue;
+        }
+        $labels[]=isset($choice_map[$selected]) ? $choice_map[$selected] : $selected;
+    }
+
+    return $labels ? implode('、',$labels) : $value;
+
+}
+
 function parse_message_html($message){
 
 
@@ -374,7 +417,7 @@ $contact_row=DB::fetch_first(
 
 if($contact_row){
 
-    $price=DB::result_first(
+    $price=intval(DB::result_first(
 
         "SELECT price
          FROM pre_app_thread_field_price
@@ -383,96 +426,67 @@ if($contact_row){
 
         array($tid)
 
-    );
+    ));
 
+    if($price>0){
 
- if($price){
-
-
-    // 默认隐藏
-
-    $contact=array(
-
-        'locked'=>true,
-
-        'optionid'=>7,
-
-        'price'=>intval($price)
-
-    );
-
-
-
-    // 检查APP登录token
-
-    $token=$_GET['token'] ?? '';
-
-
-
-    if($token){
-
-
-        $uid=DB::result_first(
-
-            "SELECT uid
-             FROM pre_app_token
-             WHERE token=%s",
-
-            array($token)
-
+        // 新发布的付费联系方式：默认隐藏，购买后显示。
+        $contact=array(
+            'locked'=>true,
+            'optionid'=>7,
+            'price'=>$price
         );
 
+        $token=$_GET['token'] ?? '';
 
+        if($token){
 
-        if($uid){
+            $uid=DB::result_first(
 
+                "SELECT uid
+                 FROM pre_app_token
+                 WHERE token=%s",
 
-            // 查询是否购买过
-
-            $buy=DB::fetch_first(
-
-                "SELECT id
-                 FROM pre_app_field_buy
-                 WHERE tid=%d
-                 AND uid=%d
-                 AND optionid=7",
-
-                array(
-
-                    $tid,
-
-                    $uid
-
-                )
+                array($token)
 
             );
 
+            if($uid){
 
+                $buy=DB::fetch_first(
 
-            if($buy){
+                    "SELECT id
+                     FROM pre_app_field_buy
+                     WHERE tid=%d
+                     AND uid=%d
+                     AND optionid=7",
 
-
-                $contact=array(
-
-                    'locked'=>false,
-
-                    'optionid'=>7,
-
-                    'value'=>$contact_row['value']
+                    array($tid,$uid)
 
                 );
 
+                if($buy){
+                    $contact=array(
+                        'locked'=>false,
+                        'optionid'=>7,
+                        'value'=>$contact_row['value']
+                    );
+                }
 
             }
 
-
         }
 
+    }else{
+
+        // 历史主题没有 APP 价格记录，保留原来论坛中可见的联系方式。
+        $contact=array(
+            'locked'=>false,
+            'optionid'=>7,
+            'value'=>$contact_row['value']
+        );
 
     }
-
-
-}
 
 }
 
@@ -481,7 +495,7 @@ if($contact_row){
  */
 $category_info=DB::fetch_all(
 
-    "SELECT v.optionid,v.value,o.title
+    "SELECT v.optionid,v.value,o.title,o.choices
      FROM pre_forum_typeoptionvar v
      LEFT JOIN pre_forum_typeoption o ON o.optionid=v.optionid
      WHERE v.tid=%d
@@ -491,6 +505,15 @@ $category_info=DB::fetch_all(
     array($tid)
 
 );
+
+foreach($category_info as &$field){
+    $field['value']=resolve_category_value(
+        $field['value'],
+        isset($field['choices']) ? $field['choices'] : ''
+    );
+    unset($field['choices']);
+}
+unset($field);
 
 
 /*
