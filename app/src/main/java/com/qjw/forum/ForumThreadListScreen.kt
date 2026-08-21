@@ -53,11 +53,9 @@ fun ForumThreadListScreen(
                  * 只有服务明确返回“禁止访问”时才拦截。
                  */
                 try {
-                    val permission = ApiClient.api.checkPermission(
-                        fid = fid,
-                        uid = UserStore.getUid()
-                    )
-                    if (permission.code == 403 || permission.data?.allow == false) {
+                    val permissionResult = PermissionManager.request(fid)
+                    val permission = permissionResult.response
+                    if (permission?.code == 403 || permission?.data?.allow == false) {
                         message = permission.message ?: "当前用户组或积分无权访问该板块"
                         return@launch
                     }
@@ -83,11 +81,9 @@ fun ForumThreadListScreen(
     LaunchedEffect(fid) {
         scope.launch {
             try {
-                val permission = ApiClient.api.checkPermission(
-                    fid = fid,
-                    uid = UserStore.getUid()
-                )
-                if (permission.code == 0 && permission.data != null) {
+                val permissionResult = PermissionManager.request(fid)
+                val permission = permissionResult.response
+                if (permission?.code == 0 && permission.data != null) {
                     canCreatePost = permission.data.allowPost == true
                     permissionNote = buildString {
                         append(permission.data.groupName ?: "当前用户组")
@@ -97,7 +93,9 @@ fun ForumThreadListScreen(
                     }
                 } else {
                     canCreatePost = false
-                    permissionNote = permission.message ?: "当前用户组不能发帖"
+                    permissionNote = permission?.message
+                        ?: permissionResult.errorMessage
+                        ?: "当前用户组不能发帖"
                 }
             } catch (_: Exception) {
                 // 兼容旧服务器：登录用户仍可进入发布页，最终由服务器验证权限。
