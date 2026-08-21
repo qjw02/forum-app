@@ -8,7 +8,16 @@ header('Content-Type: application/json; charset=utf-8');
 
 function api_site_url() {
     global $_G;
-    return rtrim($_G['siteurl'], '/');
+
+    if (!empty($_G['siteurl'])) {
+        return rtrim($_G['siteurl'], '/');
+    }
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        ? 'https://'
+        : 'http://';
+
+    return $scheme . ($_SERVER['HTTP_HOST'] ?? '');
 }
 
 /* 返回主题首张正文图片：优先 [img] 标签，再读取图片附件。 */
