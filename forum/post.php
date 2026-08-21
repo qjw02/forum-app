@@ -151,7 +151,7 @@ $group = DB::fetch_first(
     array(intval($member['groupid']))
 );
 $access = DB::fetch_first(
-    "SELECT allowpost FROM ".DB::table('forum_forum_access')." WHERE fid=%d AND groupid=%d",
+    "SELECT allowpost FROM ".DB::table('forum_access')." WHERE fid=%d AND groupid=%d",
     array($fid, intval($member['groupid']))
 );
 
