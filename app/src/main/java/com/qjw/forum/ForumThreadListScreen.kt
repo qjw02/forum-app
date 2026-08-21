@@ -70,8 +70,8 @@ fun ForumThreadListScreen(
                 } else {
                     message = result.message ?: "加载失败"
                 }
-            } catch (e: Exception) {
-                message = e.message ?: "网络错误"
+            } catch (_: Exception) {
+                message = "帖子列表暂时加载失败，请稍后重试"
             } finally {
                 loading = false
             }
