@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.qjw.forum.component.ImageViewer
 import kotlinx.coroutines.launch
@@ -499,13 +500,17 @@ fun ThreadDetail(
 
                         threadData.contact?.let { contact ->
 
+                            val highlightContact = threadData.thread.forum_name == "高级报告"
+
                             Spacer(
                                 Modifier.height(15.dp)
                             )
 
                             Text(
                                 text = "联系方式",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (highlightContact) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = if (highlightContact) FontWeight.Bold else FontWeight.Normal
                             )
 
                             Spacer(
@@ -515,11 +520,15 @@ fun ThreadDetail(
                             if(contact.locked){
 
                                 Text(
-                                    text = "🔒 联系方式已隐藏"
+                                    text = "🔒 联系方式已隐藏",
+                                    color = if (highlightContact) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (highlightContact) FontWeight.Bold else FontWeight.Normal
                                 )
 
                                 Text(
-                                    text = "需要 ${contact.price ?: 0} C币查看"
+                                    text = "需要 ${contact.price ?: 0} C币查看",
+                                    color = if (highlightContact) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (highlightContact) FontWeight.Bold else FontWeight.Normal
                                 )
 
                                 Spacer(
@@ -579,9 +588,9 @@ fun ThreadDetail(
                             }else{
 
                                 Text(
-                                    cleanDiscuzText(
-                                        contact.value ?: ""
-                                    )
+                                    text = cleanDiscuzText(contact.value ?: ""),
+                                    color = if (highlightContact) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (highlightContact) FontWeight.Bold else FontWeight.Normal
                                 )
 
                             }
