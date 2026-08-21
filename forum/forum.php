@@ -50,13 +50,33 @@ function forum_thread_cover($tid) {
         return forum_api_site_url() . '/' . ltrim($image, '/');
     }
 
-    // 通过 Discuz 附件入口读取缩略图，不直接访问旧附件分表。
-    $aid = DB::result_first(
-        "SELECT aid FROM pre_forum_attachment WHERE tid=%d ORDER BY aid ASC",
+    // 兼容网页编辑器保存的 HTML 图片。
+    if ($message && preg_match('/<img[^>]+src=[\'"]([^\'"]+)/i', $message, $match)) {
+        $image = trim($match[1]);
+        if (strpos($image, 'http://') === 0 || strpos($image, 'https://') === 0) {
+            return $image;
+        }
+        return forum_api_site_url() . '/' . ltrim($image, '/');
+    }
+
+    // 网页端和旧主题通常是附件。先读取附件分表的真实图片路径。
+    $attachments = DB::fetch_all(
+        "SELECT aid, tableid FROM pre_forum_attachment WHERE tid=%d ORDER BY aid ASC",
         array($tid)
     );
-    if ($aid) {
-        return forum_api_site_url() . '/forum.php?mod=attachment&aid=' . intval($aid);
+    foreach ($attachments as $attachment) {
+        $tableid = intval($attachment['tableid']);
+        if ($tableid < 0 || $tableid > 9) {
+            continue;
+        }
+
+        $file = DB::fetch_first(
+            "SELECT attachment, isimage FROM pre_forum_attachment_" . $tableid . " WHERE aid=%d",
+            array($attachment['aid'])
+        );
+        if ($file && intval($file['isimage']) && !empty($file['attachment'])) {
+            return forum_api_site_url() . '/data/attachment/forum/' . ltrim($file['attachment'], '/');
+        }
     }
 
     return '';
