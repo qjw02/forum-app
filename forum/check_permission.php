@@ -1,307 +1,82 @@
 <?php
 
-
-define('IN_API',true);
-
-
+define('IN_API', true);
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 
-
 C::app()->init();
-
-
 header('Content-Type: application/json; charset=utf-8');
 
-
-
-$fid=intval($_GET['fid'] ?? 0);
-
-
-$uid=intval($_GET['uid'] ?? 0);
-
-
-
-
-if(!$fid){
-
-
-    echo json_encode([
-
-        'code'=>400,
-
-        'message'=>'fid不能为空'
-
-    ],JSON_UNESCAPED_UNICODE);
-
-
+function permission_response($code, $message, $data = array()) {
+    echo json_encode(array(
+        'code' => $code,
+        'message' => $message,
+        'data' => $data
+    ), JSON_UNESCAPED_UNICODE);
     exit;
-
 }
 
+$fid = intval($_GET['fid'] ?? 0);
+$uid = intval($_GET['uid'] ?? 0);
 
+if (!$fid) {
+    permission_response(400, '板块参数不能为空');
+}
 
+$forum = DB::fetch_first(
+    "SELECT fid, name FROM " . DB::table('forum_forum') . " WHERE fid = %d AND type = 'forum'",
+    array($fid)
+);
+if (!$forum) {
+    permission_response(404, '板块不存在');
+}
 
-
-
-/*
- * 用户信息
- */
-
-
-if($uid){
-
-
-    $member=getuserbyuid($uid,1);
-
-
-
-    if(!$member){
-
-
-        echo json_encode([
-
-            'code'=>401,
-
-            'message'=>'用户不存在'
-
-        ],JSON_UNESCAPED_UNICODE);
-
-
-        exit;
-
-
+if ($uid > 0) {
+    $member = getuserbyuid($uid, 1);
+    if (!$member) {
+        permission_response(401, '用户不存在');
     }
-
-
-
-    $groupid=$member['groupid'];
-
-
-
-    $credits=intval($member['credits']);
-
-
-
-}else{
-
-
-    // 游客
-
-    $groupid=7;
-
-
-    $credits=0;
-
-
+    $groupid = intval($member['groupid']);
+    $credits = intval($member['credits']);
+} else {
+    // Discuz 默认游客组。
+    $groupid = 7;
+    $credits = 0;
 }
 
+$group = DB::fetch_first(
+    "SELECT groupid, grouptitle, allowvisit, allowpost
+     FROM " . DB::table('common_usergroup') . " WHERE groupid = %d",
+    array($groupid)
+);
+if (!$group || intval($group['allowvisit']) !== 1) {
+    permission_response(403, '当前用户组无权访问论坛');
+}
 
-
-
-
-
-/*
- * 用户组是否允许访问
- */
-
-
-$group=DB::fetch_first(
-
-"SELECT *
-
-FROM pre_common_usergroup
-
-WHERE groupid=%d",
-
-array($groupid)
-
+$access = DB::fetch_first(
+    "SELECT allowview, allowpost
+     FROM " . DB::table('forum_forum_access') . "
+     WHERE fid = %d AND groupid = %d",
+    array($fid, $groupid)
 );
 
-
-
-if(!$group){
-
-
-    echo json_encode([
-
-        'code'=>403,
-
-        'message'=>'用户组不存在'
-
-    ],JSON_UNESCAPED_UNICODE);
-
-
-    exit;
-
-
+$allowView = !$access || intval($access['allowview']) > 0;
+if (!$allowView) {
+    permission_response(403, '当前用户组无权访问该板块');
 }
-
-
-
-
-
-
 
 /*
- * 检查版块访问权限
- *
- * 如果没有特殊设置
- * 默认允许
+ * Discuz 权限以用户组为基础，若该板块设置了单独权限，则还需通过 allowpost。
+ * 这里不另造 VIP 规则；你在论坛后台调整用户组或板块权限后，APP 会自动遵守。
  */
-
-
-$access=DB::fetch_first(
-
-"SELECT *
-
-FROM pre_forum_forum_access
-
-WHERE fid=%d
-
-AND groupid=%d",
-
-array(
-$fid,
-$groupid
-)
-
-);
-
-
-
-
-
-
-if($access){
-
-
-
-    if($access['allowview']==0){
-
-
-        echo json_encode([
-
-            'code'=>403,
-
-            'message'=>'无权访问该板块'
-
-        ],JSON_UNESCAPED_UNICODE);
-
-
-        exit;
-
-
-    }
-
-
-
+$allowPost = $uid > 0 && intval($group['allowpost']) > 0;
+if ($access && intval($access['allowpost']) <= 0) {
+    $allowPost = false;
 }
 
-
-
-
-
-
-
-/*
- * 版块积分限制
- *
- * 这里读取 Discuz 版块字段
- */
-
-
-$forum=DB::fetch_first(
-
-"SELECT *
-
-FROM pre_forum_forum
-
-WHERE fid=%d",
-
-array($fid)
-
-);
-
-
-
-if(!$forum){
-
-
-    echo json_encode([
-
-        'code'=>404,
-
-        'message'=>'版块不存在'
-
-    ],JSON_UNESCAPED_UNICODE);
-
-
-    exit;
-
-
-}
-
-
-
-
-
-
-/*
- * 如果以后增加字段
- * 可在这里扩展
- *
- * need_credit
- */
-
-
-$need_credit=0;
-
-
-
-
-
-if($credits < $need_credit){
-
-
-    echo json_encode([
-
-        'code'=>403,
-
-        'message'=>'积分不足'
-
-    ],JSON_UNESCAPED_UNICODE);
-
-
-    exit;
-
-
-}
-
-
-
-
-
-
-
-echo json_encode([
-
-
-'code'=>0,
-
-
-'data'=>[
-
-
-    'allow'=>true,
-
-
-    'groupid'=>$groupid,
-
-
-    'credits'=>$credits
-
-
-]
-
-
-],JSON_UNESCAPED_UNICODE);
+permission_response(0, '权限正常', array(
+    'allow' => true,
+    'allow_post' => $allowPost,
+    'groupid' => $groupid,
+    'group_name' => $group['grouptitle'] ?: '普通会员',
+    'credits' => $credits
+));
