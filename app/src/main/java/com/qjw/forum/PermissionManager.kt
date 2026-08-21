@@ -25,12 +25,22 @@ object PermissionManager {
                         .take(160)
                 )
             } else {
-                PermissionCheckResult(
-                    response = Gson().fromJson(
-                        raw.substring(start, end + 1),
-                        PermissionResponse::class.java
+                try {
+                    PermissionCheckResult(
+                        response = Gson().fromJson(
+                            raw.substring(start, end + 1),
+                            PermissionResponse::class.java
+                        )
                     )
-                )
+                } catch (_: Exception) {
+                    PermissionCheckResult(
+                        errorMessage = "权限接口返回错误页：" + raw
+                            .replace(Regex("<[^>]*>"), " ")
+                            .replace(Regex("\\s+"), " ")
+                            .trim()
+                            .take(220)
+                    )
+                }
             }
         } catch (e: Exception) {
             PermissionCheckResult(
