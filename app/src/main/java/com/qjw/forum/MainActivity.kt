@@ -3,9 +3,13 @@ package com.qjw.forum
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.lifecycleScope
 import com.qjw.forum.navigation.AppNav
 import kotlinx.coroutines.launch
+import coil.ImageLoader
+import coil.compose.LocalImageLoader
+import coil.decode.GifDecoder
 
 
 class MainActivity : ComponentActivity(){
@@ -74,12 +78,17 @@ class MainActivity : ComponentActivity(){
 
 
 
+        val appImageLoader = ImageLoader.Builder(applicationContext)
+            .components {
+                add(GifDecoder.Factory())
+            }
+            .build()
+
         setContent {
 
-
-            AppNav()
-
-
+            CompositionLocalProvider(LocalImageLoader provides appImageLoader) {
+                AppNav()
+            }
 
         }
 
