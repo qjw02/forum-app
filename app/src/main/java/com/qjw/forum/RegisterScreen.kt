@@ -34,6 +34,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var submitting by remember { mutableStateOf(false) }
+    var registered by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Column(
@@ -91,7 +92,7 @@ fun RegisterScreen(
         Spacer(Modifier.height(20.dp))
 
         Button(
-            enabled = !submitting,
+            enabled = !submitting && !registered,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 when {
@@ -117,7 +118,7 @@ fun RegisterScreen(
                                 ).string()
 
                                 val result = try {
-                                    com.google.gson.Gson().fromJson(raw, BaseResponse::class.java)
+                                    com.google.gson.Gson().fromJson(raw, RegisterResponse::class.java)
                                 } catch (_: Exception) {
                                     val readable = raw
                                         .replace(Regex("<[^>]*>"), " ")
@@ -129,7 +130,8 @@ fun RegisterScreen(
                                 }
 
                                 if (result.code == 0) {
-                                    onSuccess()
+                                    registered = true
+                                    message = "注册成功，请点击下方“返回登录”"
                                 } else {
                                     message = result.message ?: "注册失败"
                                 }
@@ -157,7 +159,7 @@ fun RegisterScreen(
         Spacer(Modifier.height(10.dp))
 
         TextButton(onClick = onBack) {
-            Text("返回登录")
+            Text(if (registered) "去登录" else "返回登录")
         }
 
         if (message.isNotEmpty()) {
