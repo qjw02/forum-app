@@ -1,7 +1,15 @@
 <?php
 
-define('IN_API', true);
+// 与 thread.php、forum.php 使用同样的启动方式，避免 PHP Notice 混入 JSON 响应。
+error_reporting(0);
+ini_set('display_errors', '0');
+
+if (!defined('IN_API')) {
+    define('IN_API', true);
+}
+
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
 
 C::app()->init();
 header('Content-Type: application/json; charset=utf-8');
