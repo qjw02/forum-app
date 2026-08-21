@@ -121,6 +121,8 @@ data class HomeData(
 
     val new:List<Post>?,
 
+    val ads:List<HomeAd>? = emptyList(),
+
     val announcement:Announcement? = null
 
 )
@@ -130,6 +132,12 @@ data class HomeData(
 data class Announcement(
     val subject:String?,
     val message:String?
+)
+
+data class HomeAd(
+    val id:String? = null,
+    val image:String?,
+    val link:String? = null
 )
 
 data class Banner(
