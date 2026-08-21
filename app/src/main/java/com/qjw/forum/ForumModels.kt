@@ -28,6 +28,12 @@ data class PostResult(
 
 )
 
+data class RegisterResponse(
+    val code: Int,
+    val message: String?
+)
+
+
 
 // ===============================
 // 登录
