@@ -110,11 +110,23 @@ fun RegisterScreen(
                             message = ""
 
                             try {
-                                val result = ApiClient.api.register(
+                                val raw = ApiClient.api.register(
                                     username.trim(),
                                     password,
                                     email.trim()
-                                )
+                                ).string()
+
+                                val result = try {
+                                    com.google.gson.Gson().fromJson(raw, BaseResponse::class.java)
+                                } catch (_: Exception) {
+                                    val readable = raw
+                                        .replace(Regex("<[^>]*>"), " ")
+                                        .replace(Regex("\\s+"), " ")
+                                        .trim()
+                                        .take(180)
+                                    message = "注册接口错误：$readable"
+                                    return@launch
+                                }
 
                                 if (result.code == 0) {
                                     onSuccess()
