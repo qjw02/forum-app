@@ -72,10 +72,15 @@ if(is_readable($ad_file)){
                 $image=api_site_url() . '/' . ltrim($image,'/');
             }
 
+            $link=trim(strval($ad['link'] ?? ''));
+            if($link!=='' && strpos($link,'http://')!==0 && strpos($link,'https://')!==0){
+                $link=api_site_url() . '/' . ltrim($link,'/');
+            }
+
             $ads[]=array(
                 'id'=>strval($ad['id'] ?? ($index+1)),
                 'image'=>$image,
-                'link'=>strval($ad['link'] ?? '')
+                'link'=>$link
             );
         }
     }
