@@ -140,6 +140,27 @@ if(!$forum){
 
 }
 
+/*
+ * 使用 Discuz 用户组和板块权限作为唯一来源。
+ * APP 端的按钮只是提示，服务器仍在这里做最终拦截，防止绕过客户端直接发帖。
+ */
+$group = DB::fetch_first(
+    "SELECT allowpost FROM ".DB::table('common_usergroup')." WHERE groupid=%d",
+    array(intval($member['groupid']))
+);
+$access = DB::fetch_first(
+    "SELECT allowpost FROM ".DB::table('forum_forum_access')." WHERE fid=%d AND groupid=%d",
+    array($fid, intval($member['groupid']))
+);
+
+if(!$group || intval($group['allowpost']) <= 0 || ($access && intval($access['allowpost']) <= 0)){
+    echo json_encode([
+        'code'=>403,
+        'message'=>'当前用户组无权在此板块发布主题'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 /* 只有“高级报告”板块允许出售联系方式。 */
 if($contact !== '' || $price > 0){
 
