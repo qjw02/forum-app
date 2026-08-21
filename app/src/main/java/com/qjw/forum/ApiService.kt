@@ -36,6 +36,12 @@ interface ApiService {
 
 
 
+    @GET("api/forum/user_profile.php")
+    suspend fun getUserProfile(
+        @Query("uid") uid: String
+    ): PublicProfileResponse
+
+
     @GET("api/home/index.php")
     suspend fun getHomeIndex():
 
