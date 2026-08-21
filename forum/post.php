@@ -145,7 +145,9 @@ if(!$forum){
  * APP 端的按钮只是提示，服务器仍在这里做最终拦截，防止绕过客户端直接发帖。
  */
 $group = DB::fetch_first(
-    "SELECT allowpost FROM ".DB::table('common_usergroup')." WHERE groupid=%d",
+    "SELECT f.allowpost
+     FROM ".DB::table('common_usergroup_field')." f
+     WHERE f.groupid=%d",
     array(intval($member['groupid']))
 );
 $access = DB::fetch_first(
