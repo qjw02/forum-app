@@ -8,7 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 function permission_response($code, $message, $data = array()) {
     echo json_encode(array(
-        'code' => $code,
+        'code' => intval($code),
         'message' => $message,
         'data' => $data
     ), JSON_UNESCAPED_UNICODE);
@@ -18,12 +18,12 @@ function permission_response($code, $message, $data = array()) {
 $fid = intval($_GET['fid'] ?? 0);
 $uid = intval($_GET['uid'] ?? 0);
 
-if (!$fid) {
+if ($fid <= 0) {
     permission_response(400, '板块参数不能为空');
 }
 
 $forum = DB::fetch_first(
-    "SELECT fid, name FROM " . DB::table('forum_forum') . " WHERE fid = %d AND type = 'forum'",
+    "SELECT fid FROM " . DB::table('forum_forum') . " WHERE fid = %d AND type = 'forum'",
     array($fid)
 );
 if (!$forum) {
@@ -31,15 +31,20 @@ if (!$forum) {
 }
 
 if ($uid > 0) {
-    $member = getuserbyuid($uid, 1);
+    /*
+     * 直接读取会员表，避免 API 文件未加载 function_member.php 时输出 PHP 错误页面。
+     */
+    $member = DB::fetch_first(
+        "SELECT uid, groupid, credits FROM " . DB::table('common_member') . " WHERE uid = %d",
+        array($uid)
+    );
     if (!$member) {
         permission_response(401, '用户不存在');
     }
     $groupid = intval($member['groupid']);
     $credits = intval($member['credits']);
 } else {
-    // Discuz 默认游客组。
-    $groupid = 7;
+    $groupid = 7; // Discuz 默认游客组
     $credits = 0;
 }
 
@@ -48,7 +53,11 @@ $group = DB::fetch_first(
      FROM " . DB::table('common_usergroup') . " WHERE groupid = %d",
     array($groupid)
 );
-if (!$group || intval($group['allowvisit']) !== 1) {
+if (!$group) {
+    permission_response(403, '当前用户组不存在');
+}
+
+if (intval($group['allowvisit']) <= 0) {
     permission_response(403, '当前用户组无权访问论坛');
 }
 
@@ -59,14 +68,13 @@ $access = DB::fetch_first(
     array($fid, $groupid)
 );
 
-$allowView = !$access || intval($access['allowview']) > 0;
-if (!$allowView) {
+if ($access && intval($access['allowview']) <= 0) {
     permission_response(403, '当前用户组无权访问该板块');
 }
 
 /*
- * Discuz 权限以用户组为基础，若该板块设置了单独权限，则还需通过 allowpost。
- * 这里不另造 VIP 规则；你在论坛后台调整用户组或板块权限后，APP 会自动遵守。
+ * 权限完全以 Discuz 后台的“用户组”和“板块权限”为准。
+ * APP 仅显示结果；post.php 会作同样的最终拦截。
  */
 $allowPost = $uid > 0 && intval($group['allowpost']) > 0;
 if ($access && intval($access['allowpost']) <= 0) {
