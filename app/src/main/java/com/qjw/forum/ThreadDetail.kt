@@ -111,17 +111,19 @@ fun ThreadDetail(
 
 
 
-    var data by remember {
+    val cachedThread = remember(tid) { ContentCache.getThread(tid) }
 
-        mutableStateOf<ThreadData?>(null)
+    var data by remember(tid) {
+
+        mutableStateOf(cachedThread)
 
     }
 
 
 
-    var loading by remember {
+    var loading by remember(tid) {
 
-        mutableStateOf(true)
+        mutableStateOf(cachedThread == null)
 
     }
 
@@ -195,6 +197,7 @@ fun ThreadDetail(
 
                     data =
                         result.data
+                    result.data?.let { ContentCache.saveThread(tid, it) }
                     replyPage = result.data?.replies?.page ?: 1
 
                 }else{
@@ -722,6 +725,7 @@ fun ThreadDetail(
 
                                                     data =
                                                         refresh.data
+                                                    refresh.data?.let { ContentCache.saveThread(tid, it) }
 
                                                 }
 
