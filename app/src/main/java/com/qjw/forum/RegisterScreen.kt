@@ -122,7 +122,11 @@ fun RegisterScreen(
                                     message = result.message ?: "注册失败"
                                 }
                             } catch (e: Exception) {
-                                message = "注册请求失败，请检查网络或稍后重试"
+                                message = when (e) {
+                                    is retrofit2.HttpException -> "注册服务错误（${e.code()}）"
+                                    is com.google.gson.JsonSyntaxException -> "注册接口返回异常，请确认服务器 register.php 已覆盖"
+                                    else -> "注册请求失败：${e.message ?: "请检查网络"}"
+                                }
                             } finally {
                                 submitting = false
                             }
