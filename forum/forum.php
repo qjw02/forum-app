@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(0);
+ini_set('display_errors', '0');
+
 define('IN_API', true);
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 
@@ -25,10 +28,14 @@ if (!$forum) {
 
 function forum_api_site_url() {
     global $_G;
-    return rtrim($_G['siteurl'], '/');
+    if (!empty($_G['siteurl'])) {
+        return rtrim($_G['siteurl'], '/');
+    }
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    return $scheme . ($_SERVER['HTTP_HOST'] ?? '');
 }
 
-/* 返回主题首张正文图片：优先 [img]，再读取论坛图片附件。 */
+/* 只读取首帖 [img] 图片，避免旧附件分表异常影响整个板块列表。 */
 function forum_thread_cover($tid) {
     $message = DB::result_first(
         "SELECT message FROM pre_forum_post WHERE tid=%d AND first=1",
@@ -41,23 +48,6 @@ function forum_thread_cover($tid) {
             return $image;
         }
         return forum_api_site_url() . '/' . ltrim($image, '/');
-    }
-
-    $attachments = DB::fetch_all(
-        "SELECT aid, tableid FROM pre_forum_attachment WHERE tid=%d",
-        array($tid)
-    );
-
-    foreach ($attachments as $attachment) {
-        $tableid = intval($attachment['tableid']);
-        $row = DB::fetch_first(
-            "SELECT attachment, isimage FROM pre_forum_attachment_" . $tableid . " WHERE aid=%d",
-            array($attachment['aid'])
-        );
-
-        if ($row && intval($row['isimage'])) {
-            return forum_api_site_url() . '/data/attachment/forum/' . $row['attachment'];
-        }
     }
 
     return '';
