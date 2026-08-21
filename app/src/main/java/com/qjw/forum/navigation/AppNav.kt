@@ -656,18 +656,6 @@ fun AppNav(){
 
                         threadRoute.substringBefore("?")
 
-                    val returnPage =
-
-                        threadRoute
-                            .substringAfter("back=", "home")
-                            .substringBefore("&")
-                            .takeIf {
-                                it == "message" ||
-                                it == "myThreads" ||
-                                it == "myReplies"
-                            }
-                            ?: "home"
-
                     val focusPid =
 
                         threadRoute
@@ -699,13 +687,13 @@ fun AppNav(){
 
 
 
-                        onBack = {
+                        onBack = { forumFid ->
 
-
-
-                            page=returnPage
-
-
+                            page = if (forumFid.isNotBlank()) {
+                                "forumThread/$forumFid"
+                            } else {
+                                "forum"
+                            }
 
                         },
 
