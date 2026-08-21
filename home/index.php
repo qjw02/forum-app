@@ -54,6 +54,28 @@ function add_cover_images($threads) {
     return $threads;
 }
 
+/* 首页横幅广告：服务器 api/home/ads.json 可直接维护多条广告。 */
+$ads=array();
+$ad_file=__DIR__.'/ads.json';
+
+if(is_readable($ad_file)){
+    $raw_ads=json_decode(file_get_contents($ad_file),true);
+
+    if(is_array($raw_ads)){
+        foreach($raw_ads as $index=>$ad){
+            if(!is_array($ad) || empty($ad['image'])){
+                continue;
+            }
+
+            $ads[]=array(
+                'id'=>strval($ad['id'] ?? ($index+1)),
+                'image'=>strval($ad['image']),
+                'link'=>strval($ad['link'] ?? '')
+            );
+        }
+    }
+}
+
 /* Discuz 后台的当前文字公告（仅公开公告）。 */
 $announcement = DB::fetch_first(
     "SELECT subject, message
@@ -121,6 +143,7 @@ echo json_encode(array(
         'forums' => $forums,
         'hot' => $hot,
         'new' => $new,
+        'ads' => $ads,
         'announcement' => $announcement ?: null
     )
 ), JSON_UNESCAPED_UNICODE);
