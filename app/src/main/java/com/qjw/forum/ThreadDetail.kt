@@ -96,7 +96,7 @@ fun ThreadDetail(
 
     focusPid:String? = null,
 
-    onBack:()->Unit,
+    onBack:(String)->Unit,
 
     onLogin:()->Unit
 
@@ -311,7 +311,7 @@ fun ThreadDetail(
 
                 onClick = {
 
-                    onBack()
+                    onBack(data?.thread?.fid ?: "")
 
                 }
 
