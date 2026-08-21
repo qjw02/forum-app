@@ -101,6 +101,26 @@ data class ProfileData(
 )
 
 
+data class PublicProfileResponse(
+    val code: Int,
+    val message: String?,
+    val data: PublicProfileData?
+)
+
+data class PublicProfileData(
+    val uid: Int,
+    val username: String,
+    val avatar: String?,
+    val group_name: String? = null,
+    val credits: Int? = 0,
+    val money: Int? = 0,
+    val threads: Int? = 0,
+    val replies: Int? = 0,
+    val favorites: Int? = 0,
+    val regdate: Long? = null
+)
+
+
 
 // ===============================
 // 首页
