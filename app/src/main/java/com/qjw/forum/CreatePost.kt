@@ -53,6 +53,9 @@ fun CreatePost(
     var publishing by remember { mutableStateOf(false) }
     var showForumMenu by remember { mutableStateOf(false) }
     var draftRestored by remember { mutableStateOf(false) }
+    var checkingPostPermission by remember { mutableStateOf(false) }
+    var canPublish by remember { mutableStateOf(false) }
+    var postPermissionMessage by remember { mutableStateOf("正在检查发布权限...") }
     val draftKey = remember(fid) { "post_draft_" + (fid ?: "select") }
     val images = remember { mutableStateListOf<Uri>() }
     val scope = rememberCoroutineScope()
@@ -88,6 +91,28 @@ fun CreatePost(
             } finally {
                 draftRestored = true
             }
+        }
+    }
+
+    LaunchedEffect(selectedForum?.fid) {
+        val forum = selectedForum ?: return@LaunchedEffect
+        checkingPostPermission = true
+        canPublish = false
+        try {
+            val permission = ApiClient.api.checkPermission(
+                fid = forum.fid.toString(),
+                uid = UserStore.getUid()
+            )
+            if (permission.code == 0 && permission.data?.allowPost == true) {
+                canPublish = true
+                postPermissionMessage = "允许在“${forum.name}”发布主题"
+            } else {
+                postPermissionMessage = permission.message ?: "当前用户组无权在此板块发布主题"
+            }
+        } catch (_: Exception) {
+            postPermissionMessage = "无法验证发布权限，请稍后重试"
+        } finally {
+            checkingPostPermission = false
         }
     }
 
@@ -158,6 +183,19 @@ fun CreatePost(
             }
         } else {
             Text("发布到：" + (selectedForum?.name ?: "加载中..."))
+        }
+
+        if (selectedForum != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = postPermissionMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (canPublish) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                }
+            )
         }
 
         Spacer(Modifier.height(12.dp))
@@ -256,8 +294,12 @@ fun CreatePost(
 
         Button(
             modifier = Modifier.fillMaxWidth(),
-            enabled = !publishing,
+            enabled = !publishing && canPublish && !checkingPostPermission,
             onClick = {
+                if (!canPublish) {
+                    resultText = postPermissionMessage
+                    return@Button
+                }
                 val forum = selectedForum
                 if (forum == null) {
                     resultText = "请选择板块"
@@ -320,7 +362,13 @@ fun CreatePost(
                 }
             }
         ) {
-            Text("发布")
+            Text(
+                when {
+                    checkingPostPermission -> "检查权限中..."
+                    canPublish -> "发布"
+                    else -> "当前无发布权限"
+                }
+            )
         }
 
         Spacer(Modifier.height(10.dp))
