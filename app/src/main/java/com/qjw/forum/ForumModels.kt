@@ -219,6 +219,8 @@ data class ThreadInfo(
 
     val tid:String,
 
+    val fid:String? = null,
+
     val subject:String,
 
     val content:String,
