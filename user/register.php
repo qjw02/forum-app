@@ -37,7 +37,6 @@ function register_fatal_handler() {
 register_shutdown_function('register_fatal_handler');
 
 define('IN_API', true);
-define('IN_DISCUZ', true);
 
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 C::app()->init();
@@ -62,6 +61,16 @@ try {
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         register_response(400, '请输入有效的邮箱地址');
+    }
+
+    if (!defined('UC_API')) {
+        $ucConfig = defined('DISCUZ_ROOT')
+            ? DISCUZ_ROOT . './config/config_ucenter.php'
+            : '/www/wwwroot/qq/wwwroot/config/config_ucenter.php';
+
+        if (is_readable($ucConfig)) {
+            require_once $ucConfig;
+        }
     }
 
     if (!function_exists('uc_user_register')) {
