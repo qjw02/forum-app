@@ -1,6 +1,7 @@
 package com.qjw.forum
 
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -99,7 +100,9 @@ fun ThreadDetail(
 
     onBack:(String)->Unit,
 
-    onLogin:()->Unit
+    onLogin:()->Unit,
+
+    onOpenUser: (String) -> Unit
 
 ){
 
@@ -403,7 +406,12 @@ fun ThreadDetail(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ){
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    modifier = Modifier.clickable {
+                                        onOpenUser(threadData.thread.author.uid)
+                                    },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text("作者：" + threadData.thread.author.username + " · ")
                                     Text(
                                         text = threadData.thread.author.group_name ?: "普通会员",
@@ -819,7 +827,12 @@ fun ThreadDetail(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ){
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Row(
+                                            modifier = Modifier.clickable {
+                                                onOpenUser(reply.author.uid)
+                                            },
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             Text(reply.author.username + " · ")
                                             Text(
                                                 text = reply.author.group_name ?: "普通会员",
