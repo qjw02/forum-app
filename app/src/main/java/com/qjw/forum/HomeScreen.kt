@@ -170,7 +170,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(6f)
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .padding(horizontal = 12.dp, vertical = 1.dp)
                                 .clickable {
                                     val tid = Regex("""(?:[?&]tid=)(\d+)""")
                                         .find(ad.link.orEmpty())
