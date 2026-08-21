@@ -38,6 +38,37 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 
 @Composable
+private fun HomeAdBanner(ad: HomeAd, onOpenThread: (String) -> Unit) {
+    var imageRatio by remember(ad.image) { mutableStateOf(6f) }
+
+    AsyncImage(
+        model = ad.image,
+        contentDescription = "广告",
+        contentScale = ContentScale.Fit,
+        onSuccess = { state ->
+            val size = state.painter.intrinsicSize
+            if (size.width > 0f && size.height > 0f) {
+                imageRatio = size.width / size.height
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 1.dp)
+            .aspectRatio(imageRatio)
+            .clickable {
+                val tid = Regex("""(?:[?&]tid=)(\d+)""")
+                    .find(ad.link.orEmpty())
+                    ?.groupValues
+                    ?.getOrNull(1)
+
+                if (!tid.isNullOrBlank()) {
+                    onOpenThread(tid)
+                }
+            }
+    )
+}
+
+@Composable
 fun HomeScreen(
     onOpenThread: (String) -> Unit,
     onOpenForum: (String) -> Unit
@@ -163,25 +194,7 @@ fun HomeScreen(
                     key = { it.id ?: it.image.orEmpty() }
                 ) { ad ->
                     if (!ad.image.isNullOrBlank()) {
-                        AsyncImage(
-                            model = ad.image,
-                            contentDescription = "广告",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(6f)
-                                .padding(horizontal = 12.dp, vertical = 1.dp)
-                                .clickable {
-                                    val tid = Regex("""(?:[?&]tid=)(\d+)""")
-                                        .find(ad.link.orEmpty())
-                                        ?.groupValues
-                                        ?.getOrNull(1)
-
-                                    if (!tid.isNullOrBlank()) {
-                                        onOpenThread(tid)
-                                    }
-                                }
-                        )
+                        HomeAdBanner(ad = ad, onOpenThread = onOpenThread)
                     }
                 }
 
