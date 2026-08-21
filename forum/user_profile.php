@@ -7,14 +7,7 @@ require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
 
 C::app()->init();
 
-require_once '/www/wwwroot/qq/wwwroot/api/common/sign.php';
-
 header('Content-Type: application/json; charset=utf-8');
-
-if (!check_api_sign()) {
-    echo json_encode(array('code' => 403, 'message' => '签名错误'), JSON_UNESCAPED_UNICODE);
-    exit;
-}
 
 $uid = intval(isset($_GET['uid']) ? $_GET['uid'] : 0);
 if (!$uid) {
