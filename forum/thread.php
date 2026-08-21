@@ -159,6 +159,10 @@ function resolve_category_value($value,$choices){
 
     $choice_map=@unserialize($choices);
 
+    if(is_array($choice_map) && isset($choice_map['choices']) && is_array($choice_map['choices'])){
+        $choice_map=$choice_map['choices'];
+    }
+
     if(!is_array($choice_map)){
         $choice_map=array();
         $lines=preg_split('/\r\n|\r|\n/',trim($choices));
@@ -495,7 +499,7 @@ if($contact_row){
  */
 $category_info=DB::fetch_all(
 
-    "SELECT v.optionid,v.value,o.title,o.choices
+    "SELECT v.optionid,v.value,o.title,o.rules
      FROM pre_forum_typeoptionvar v
      LEFT JOIN pre_forum_typeoption o ON o.optionid=v.optionid
      WHERE v.tid=%d
@@ -509,9 +513,9 @@ $category_info=DB::fetch_all(
 foreach($category_info as &$field){
     $field['value']=resolve_category_value(
         $field['value'],
-        isset($field['choices']) ? $field['choices'] : ''
+        isset($field['rules']) ? $field['rules'] : ''
     );
-    unset($field['choices']);
+    unset($field['rules']);
 }
 unset($field);
 
