@@ -57,8 +57,10 @@ if ($uid > 0) {
 }
 
 $group = DB::fetch_first(
-    "SELECT groupid, grouptitle, allowvisit, allowpost
-     FROM " . DB::table('common_usergroup') . " WHERE groupid = %d",
+    "SELECT g.groupid, g.grouptitle, g.allowvisit, f.allowpost
+     FROM " . DB::table('common_usergroup') . " g
+     LEFT JOIN " . DB::table('common_usergroup_field') . " f ON f.groupid = g.groupid
+     WHERE g.groupid = %d",
     array($groupid)
 );
 if (!$group) {
