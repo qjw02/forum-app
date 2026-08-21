@@ -1,14 +1,13 @@
 <?php
 
-define('IN_API', true);
-
-require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
-C::app()->init();
-require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
-
-header('Content-Type: application/json; charset=utf-8');
+ob_start();
 
 function register_response($code, $message, $data = array()) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(array(
         'code' => $code,
         'message' => $message,
@@ -17,10 +16,36 @@ function register_response($code, $message, $data = array()) {
     exit;
 }
 
+function register_fatal_handler() {
+    $error = error_get_last();
+    $fatalTypes = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR);
+
+    if ($error && in_array($error['type'], $fatalTypes)) {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array(
+            'code' => 500,
+            'message' => '注册服务异常：' . $error['message'],
+            'data' => array()
+        ), JSON_UNESCAPED_UNICODE);
+    }
+}
+
+register_shutdown_function('register_fatal_handler');
+
+define('IN_API', true);
+
+require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
+C::app()->init();
+require_once '/www/wwwroot/qq/wwwroot/source/function/function_member.php';
+
 try {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $email = trim($_POST['email'] ?? '');
+    $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
 
     if ($username === '' || $password === '' || $email === '') {
         register_response(400, '用户名、密码和邮箱不能为空');
@@ -49,7 +74,7 @@ try {
     }
 
     if (!function_exists('uc_user_register')) {
-        register_response(500, '注册服务未正确加载，请检查服务器的 uc_client 目录');
+        register_response(500, '注册服务未正确加载，请检查服务器 uc_client/client.php 是否存在');
     }
 
     $uid = intval(uc_user_register($username, $password, $email));
@@ -66,18 +91,14 @@ try {
         register_response(400, isset($messages[$uid]) ? $messages[$uid] : '注册失败，请稍后重试');
     }
 
-    /*
-     * uc_user_register 只负责创建 UCenter 用户。补齐 Discuz 本地资料，
-     * 避免“注册成功但不能登录”。
-     */
     $member = getuserbyuid($uid, 1);
     if (empty($member)) {
         global $_G;
 
-        $groupid = intval($_G['setting']['newusergroupid'] ?? 0);
-        if ($groupid <= 0) {
-            $groupid = 10;
-        }
+        $groupid = !empty($_G['setting']['newusergroupid'])
+            ? intval($_G['setting']['newusergroupid'])
+            : 10;
+        $clientIp = isset($_G['clientip']) ? $_G['clientip'] : '';
 
         DB::insert('common_member', array(
             'uid' => $uid,
@@ -90,15 +111,13 @@ try {
             'credits' => 0,
             'timeoffset' => 9999
         ));
-
         DB::insert('common_member_status', array(
             'uid' => $uid,
-            'regip' => $_G['clientip'] ?? '',
-            'lastip' => $_G['clientip'] ?? '',
+            'regip' => $clientIp,
+            'lastip' => $clientIp,
             'lastvisit' => TIMESTAMP,
             'lastactivity' => TIMESTAMP
         ));
-
         DB::insert('common_member_profile', array('uid' => $uid));
         DB::insert('common_member_field_forum', array('uid' => $uid));
         DB::insert('common_member_field_home', array('uid' => $uid));
@@ -106,6 +125,6 @@ try {
     }
 
     register_response(0, '注册成功，请使用新账号登录', array('uid' => $uid));
-} catch (Throwable $error) {
+} catch (Exception $error) {
     register_response(500, '注册服务异常：' . $error->getMessage());
 }
