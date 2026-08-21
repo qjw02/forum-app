@@ -571,7 +571,8 @@ data class PrivateChatItem(
     val pmid: String,
     val uid: String,
     val username: String?,
-    val message: String?
+    val message: String?,
+    val dateline: Long? = null
 )
 
 
