@@ -1,7 +1,5 @@
 package com.qjw.forum
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,7 +29,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.qjw.forum.component.BannerView
@@ -55,7 +52,6 @@ fun HomeScreen(
     var searchMessage by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<Post>>(emptyList()) }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     fun fetchHome(version: String?) {
         scope.launch {
@@ -170,17 +166,19 @@ fun HomeScreen(
                         AsyncImage(
                             model = ad.image,
                             contentDescription = "广告",
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(78.dp)
+                                .aspectRatio(6f)
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clickable {
-                                    val link = ad.link.orEmpty()
-                                    if (link.isNotBlank()) {
-                                        context.startActivity(
-                                            Intent(Intent.ACTION_VIEW, Uri.parse(link))
-                                        )
+                                    val tid = Regex("""(?:[?&]tid=)(\d+)""")
+                                        .find(ad.link.orEmpty())
+                                        ?.groupValues
+                                        ?.getOrNull(1)
+
+                                    if (!tid.isNullOrBlank()) {
+                                        onOpenThread(tid)
                                     }
                                 }
                         )
