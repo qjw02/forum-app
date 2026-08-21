@@ -410,13 +410,13 @@ data class PermissionResponse(
 
 
 data class PermissionData(
-
-    val allow:Boolean,
-
-    val groupid:Int,
-
-    val credits:Int
-
+    val allow: Boolean,
+    @SerializedName("allow_post")
+    val allowPost: Boolean? = false,
+    val groupid: Int,
+    @SerializedName("group_name")
+    val groupName: String? = null,
+    val credits: Int
 )
 
 
