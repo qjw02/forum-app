@@ -99,18 +99,16 @@ fun CreatePost(
         checkingPostPermission = true
         canPublish = false
         try {
-            val permission = ApiClient.api.checkPermission(
-                fid = forum.fid.toString(),
-                uid = UserStore.getUid()
-            )
-            if (permission.code == 0 && permission.data?.allowPost == true) {
+            val permissionResult = PermissionManager.request(forum.fid.toString())
+            val permission = permissionResult.response
+            if (permission?.code == 0 && permission.data?.allowPost == true) {
                 canPublish = true
                 postPermissionMessage = "允许在“${forum.name}”发布主题"
             } else {
-                postPermissionMessage = permission.message ?: "当前用户组无权在此板块发布主题"
+                postPermissionMessage = permission?.message
+                    ?: permissionResult.errorMessage
+                    ?: "当前用户组无权在此板块发布主题"
             }
-        } catch (_: Exception) {
-            postPermissionMessage = "无法验证发布权限，请稍后重试"
         } finally {
             checkingPostPermission = false
         }
