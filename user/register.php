@@ -37,6 +37,7 @@ function register_fatal_handler() {
 register_shutdown_function('register_fatal_handler');
 
 define('IN_API', true);
+define('IN_DISCUZ', true);
 
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 C::app()->init();
