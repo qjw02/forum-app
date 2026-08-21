@@ -158,7 +158,7 @@ interface ApiService {
         @Query("uid")
         uid:Int
 
-    ):PermissionResponse
+    ):okhttp3.ResponseBody
 
 
 
