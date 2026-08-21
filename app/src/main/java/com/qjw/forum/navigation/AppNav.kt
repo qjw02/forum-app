@@ -270,6 +270,19 @@ fun AppNav(){
 
 
 
+                // 查看其他用户资料
+                page.startsWith("userProfile/") -> {
+                    val profileRoute = page.removePrefix("userProfile/")
+                    val uid = profileRoute.substringBefore("?")
+                    val fromTid = profileRoute.substringAfter("from=", "")
+                    UserProfileScreen(
+                        uid = uid,
+                        onBack = {
+                            page = if (fromTid.isNotBlank()) "thread/$fromTid" else "home"
+                        }
+                    )
+                }
+
                 // 我的
 
                 page=="profile" -> {
@@ -707,6 +720,10 @@ fun AppNav(){
 
 
 
+                        },
+
+                        onOpenUser = { uid ->
+                            page = "userProfile/$uid?from=$tid"
                         }
 
 
