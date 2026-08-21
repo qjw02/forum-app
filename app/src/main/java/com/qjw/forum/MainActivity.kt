@@ -10,6 +10,8 @@ import kotlinx.coroutines.launch
 import coil.ImageLoader
 import coil.compose.LocalImageLoader
 import coil.decode.GifDecoder
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
 
 
 class MainActivity : ComponentActivity(){
@@ -81,6 +83,17 @@ class MainActivity : ComponentActivity(){
         val appImageLoader = ImageLoader.Builder(applicationContext)
             .components {
                 add(GifDecoder.Factory())
+            }
+            .memoryCache {
+                MemoryCache.Builder(applicationContext)
+                    .maxSizePercent(0.25)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("qjw_image_cache"))
+                    .maxSizePercent(0.03)
+                    .build()
             }
             .build()
 
