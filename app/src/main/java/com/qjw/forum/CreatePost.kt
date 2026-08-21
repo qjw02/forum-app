@@ -52,6 +52,8 @@ fun CreatePost(
     var resultText by remember { mutableStateOf("") }
     var publishing by remember { mutableStateOf(false) }
     var showForumMenu by remember { mutableStateOf(false) }
+    var draftRestored by remember { mutableStateOf(false) }
+    val draftKey = remember(fid) { "post_draft_" + (fid ?: "select") }
     val images = remember { mutableStateListOf<Uri>() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -66,10 +68,54 @@ fun CreatePost(
                     if (fid != null) {
                         selectedForum = forums.find { it.fid.toString() == fid }
                     }
+
+                    PostDraftStore.load(context, draftKey)?.let { draft ->
+                        subject = draft.subject
+                        message = draft.message
+                        sellContact = draft.sellContact
+                        contact = draft.contact
+                        priceText = draft.price
+                        if (fid == null && draft.forumId != null) {
+                            selectedForum = forums.find { it.fid == draft.forumId }
+                        }
+                        if (draft.subject.isNotBlank() || draft.message.isNotBlank()) {
+                            resultText = "已恢复本机草稿（图片需重新选择）"
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 resultText = e.message ?: "加载板块失败"
+            } finally {
+                draftRestored = true
             }
+        }
+    }
+
+    LaunchedEffect(
+        draftRestored,
+        selectedForum?.fid,
+        subject,
+        message,
+        sellContact,
+        contact,
+        priceText
+    ) {
+        if (!draftRestored) return@LaunchedEffect
+        if (subject.isBlank() && message.isBlank() && contact.isBlank()) {
+            PostDraftStore.clear(context, draftKey)
+        } else {
+            PostDraftStore.save(
+                context,
+                draftKey,
+                PostDraft(
+                    forumId = selectedForum?.fid,
+                    subject = subject,
+                    message = message,
+                    sellContact = sellContact,
+                    contact = contact,
+                    price = priceText
+                )
+            )
         }
     }
 
@@ -188,6 +234,26 @@ fun CreatePost(
 
         Spacer(Modifier.height(15.dp))
 
+        if (subject.isNotBlank() || message.isNotBlank() || contact.isNotBlank()) {
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !publishing,
+                onClick = {
+                    subject = ""
+                    message = ""
+                    sellContact = false
+                    contact = ""
+                    priceText = "10"
+                    images.clear()
+                    PostDraftStore.clear(context, draftKey)
+                    resultText = "草稿已清空"
+                }
+            ) {
+                Text("清空本机草稿")
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+
         Button(
             modifier = Modifier.fillMaxWidth(),
             enabled = !publishing,
@@ -237,6 +303,7 @@ fun CreatePost(
 
                         if (result.code == 0) {
                             PostCache.clear()
+                            PostDraftStore.clear(context, draftKey)
                             result.data?.tid?.let { onOpenThread(it.toString()) }
                         } else {
                             resultText = result.message ?: "发布失败"
