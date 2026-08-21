@@ -221,6 +221,8 @@ data class ThreadInfo(
 
     val fid:String? = null,
 
+    val forum_name:String? = null,
+
     val subject:String,
 
     val content:String,
