@@ -60,6 +60,24 @@ object ContentCache {
             ?.putString("forum_data_$fid", gson.toJson(data))
             ?.apply()
     }
+
+    fun getThread(tid: String): ThreadData? {
+        val prefs = context?.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE) ?: return null
+        val data = prefs.getString("thread_data_$tid", "").orEmpty()
+        if (data.isBlank()) return null
+
+        return runCatching {
+            gson.fromJson(data, ThreadData::class.java)
+        }.getOrNull()
+    }
+
+    fun saveThread(tid: String, data: ThreadData) {
+        context
+            ?.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            ?.edit()
+            ?.putString("thread_data_$tid", gson.toJson(data))
+            ?.apply()
+    }
 }
 
 data class CachedHome(
