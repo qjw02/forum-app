@@ -33,6 +33,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun PrivateChatScreen(
@@ -41,6 +44,7 @@ fun PrivateChatScreen(
 ) {
     val currentUid = UserStore.getUid().toString()
     val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
     var loading by remember(plid) { mutableStateOf(true) }
     var error by remember(plid) { mutableStateOf("") }
     var messages by remember(plid) { mutableStateOf<List<PrivateChatItem>>(emptyList()) }
@@ -63,10 +67,18 @@ fun PrivateChatScreen(
         }
     }
 
+    // 仅在用户打开此聊天页时更新，避免在其他页面反复请求。
     LaunchedEffect(plid) {
         while (true) {
             loadMessages()
-            delay(5_000)
+            delay(8_000)
+        }
+    }
+
+    // 收到或发出新消息时，自动定位到最新消息。
+    LaunchedEffect(messages.lastOrNull()?.pmid) {
+        if (messages.isNotEmpty()) {
+            scrollState.animateScrollTo(scrollState.maxValue)
         }
     }
 
@@ -78,7 +90,7 @@ fun PrivateChatScreen(
         modifier = Modifier
             .fillMaxSize()
             .widthIn(max = 600.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
         Button(
@@ -93,6 +105,11 @@ fun PrivateChatScreen(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
+        Text(
+            text = "聊天页面打开时自动更新",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         Spacer(Modifier.height(12.dp))
 
@@ -106,7 +123,7 @@ fun PrivateChatScreen(
                 CircularProgressIndicator()
             }
 
-            error.isNotEmpty() -> Text(error)
+            error.isNotEmpty() && messages.isEmpty() -> Text(error)
 
             else -> Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -119,6 +136,15 @@ fun PrivateChatScreen(
                     )
                 }
             }
+        }
+
+        if (error.isNotEmpty() && messages.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Spacer(Modifier.height(12.dp))
@@ -198,6 +224,15 @@ private fun ChatBubble(
             )
             Spacer(Modifier.height(4.dp))
             Text(chat.message.orEmpty())
+            chat.dateline?.takeIf { it > 0 }?.let { seconds ->
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
+                        .format(Date(seconds * 1000)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
