@@ -159,7 +159,9 @@ function resolve_category_value($value,$choices){
 
     $choice_map=@unserialize($choices);
 
-    if(is_array($choice_map) && isset($choice_map['choices']) && is_array($choice_map['choices'])){
+    // Discuz 将可选项保存在规则数组的 choices 字段中；
+    // choices 可能是数组，也可能是按行保存的文本。
+    if(is_array($choice_map) && array_key_exists('choices',$choice_map)){
         $choice_map=$choice_map['choices'];
     }
 
