@@ -400,6 +400,15 @@ if(!$thread){
 
 
 
+$forum_name=DB::result_first(
+
+    "SELECT name FROM pre_forum_forum WHERE fid=%d",
+
+    array($thread['fid'])
+
+);
+
+
 /*
  * 联系方式收费检测
  */
@@ -787,6 +796,8 @@ echo json_encode([
 
 
     'fid'=>$thread['fid'],
+
+    'forum_name'=>$forum_name,
 
 
 
