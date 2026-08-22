@@ -61,11 +61,35 @@ function register_referral_log($referrerUid, $newUid) {
         KEY `referrer_uid` (`referrer_uid`)
     ) ENGINE=MyISAM DEFAULT CHARSET=utf8");
 
+    /*
+     * 同一新会员只能产生一次推荐奖励。先查记录，再发放积分，
+     * 使统计明细与实际积分保持一致。
+     */
+    $alreadyRewarded = intval(DB::result_first(
+        "SELECT id FROM pre_app_referral_log WHERE referred_uid=%d",
+        array($newUid)
+    ));
+    if ($alreadyRewarded > 0) {
+        return false;
+    }
+
+    DB::insert('app_referral_log', array(
+        'referrer_uid' => $referrerUid,
+        'referred_uid' => $newUid,
+        'money_reward' => 50,
+        'coin_reward' => 10,
+        'contribution_reward' => 1,
+        'dateline' => TIMESTAMP
+    ));
+
+    // Discuz：extcredits1=贡献，extcredits2=金钱，extcredits4=C币。
     DB::query(
-        "INSERT IGNORE INTO pre_app_referral_log
-         (referrer_uid, referred_uid, money_reward, coin_reward, contribution_reward, dateline)
-         VALUES (%d, %d, 50, 10, 1, %d)",
-        array($referrerUid, $newUid, TIMESTAMP)
+        "UPDATE pre_common_member_count
+         SET extcredits1=extcredits1+1,
+             extcredits2=extcredits2+50,
+             extcredits4=extcredits4+10
+         WHERE uid=%d",
+        array($referrerUid)
     );
 
     return true;
