@@ -7,16 +7,14 @@ object ApiConfig {
     // 默认API地址
 
     var baseUrl =
-
-        "https://a3x9r3.cdlf3.com/"
+        ""
 
 
 
     // 图片地址
 
     var imageUrl =
-
-        "https://a3x9r3.cdlf3.com/"
+        ""
 
 
 
