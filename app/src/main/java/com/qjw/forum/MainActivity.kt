@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity(){
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("qjw_image_cache"))
-                    .maxSizePercent(0.03)
+                    .maxSizeBytes(150L * 1024L * 1024L)
                     .build()
             }
             .build()
