@@ -47,6 +47,7 @@ fun EditPostScreen(
     var saving by remember(tid) { mutableStateOf(false) }
     var subject by remember(tid) { mutableStateOf("") }
     var message by remember(tid) { mutableStateOf("") }
+    var forumId by remember(tid) { mutableStateOf<String?>(null) }
     var originalImages by remember(tid) { mutableStateOf<List<String>>(emptyList()) }
     var uploadProgress by remember(tid) { mutableStateOf("") }
     var deletingImage by remember(tid) { mutableStateOf<String?>(null) }
@@ -59,6 +60,7 @@ fun EditPostScreen(
             val result = ApiClient.api.getThread(tid)
             if (result.code == 0 && result.data != null) {
                 subject = result.data.thread.subject
+                forumId = result.data.thread.fid
                 message = cleanEditableThreadText(
                     result.data.thread.rawContent ?: result.data.thread.content
                 )
@@ -167,6 +169,7 @@ fun EditPostScreen(
                             val result = ApiClient.api.editPost(tid, subject.trim(), finalMessage)
                             if (result.code == 0) {
                                 ContentCache.clearThread(tid)
+                                forumId?.let { ContentCache.clearForum(it) }
                                 PostCache.clear()
                                 onSaved(tid)
                             } else {
