@@ -622,7 +622,21 @@ data class ReferralStatsResponse(
 )
 
 data class ReferralStatsData(
-    val visit_count: Int?
+    val visit_count: Int? = 0,
+    val registered_count: Int? = 0,
+    val total_money: Int? = 0,
+    val total_coin: Int? = 0,
+    val total_contribution: Int? = 0,
+    val rewards: List<ReferralRewardItem>? = emptyList()
+)
+
+data class ReferralRewardItem(
+    val uid: Int? = null,
+    val username: String? = null,
+    val money: Int? = 0,
+    val coin: Int? = 0,
+    val contribution: Int? = 0,
+    val dateline: Long? = null
 )
 
 
