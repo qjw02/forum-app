@@ -181,9 +181,11 @@ private fun MyThreadCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(10.dp))
-            androidx.compose.foundation.layout.Row {
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+            ) {
                 OutlinedButton(onClick = onEdit) { Text("编辑") }
-                Spacer(Modifier.height(1.dp).weight(1f))
                 OutlinedButton(onClick = onDelete) { Text("删除") }
             }
         }
