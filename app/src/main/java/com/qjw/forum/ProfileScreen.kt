@@ -48,6 +48,7 @@ fun ProfileScreen(
     onReferral: () -> Unit,
     onMyThreads: () -> Unit,
     onMyReplies: () -> Unit,
+    onDrafts: () -> Unit,
     onFriends: () -> Unit,
     onVip: () -> Unit
 ) {
@@ -245,6 +246,8 @@ fun ProfileScreen(
                 ProfileAction("📄 我的主题", onMyThreads)
                 Spacer(Modifier.height(10.dp))
                 ProfileAction("💬 我的回复", onMyReplies)
+                Spacer(Modifier.height(10.dp))
+                ProfileAction("📝 本机草稿", onDrafts)
                 Spacer(Modifier.height(10.dp))
                 ProfileAction("👥 好友管理", onFriends)
 
