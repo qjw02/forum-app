@@ -100,8 +100,18 @@ fun ProfileScreen(
                 val part = MultipartBody.Part.createFormData("file", file.name, body)
                 val result = ApiClient.api.uploadAvatar(part)
                 if (result.code == 0) {
-                    ProfileCache.clear()
-                    loadProfile()
+                    val updatedProfile = profile?.copy(
+                        avatar = profile?.avatar?.let {
+                            it + "&t=" + System.currentTimeMillis()
+                        }
+                    )
+                    if (updatedProfile != null) {
+                        profile = updatedProfile
+                        ProfileCache.save(updatedProfile)
+                    } else {
+                        ProfileCache.clear()
+                        loadProfile()
+                    }
                     message = "头像已更新"
                 } else {
                     message = result.message ?: "头像上传失败"
