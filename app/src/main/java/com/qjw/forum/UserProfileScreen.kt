@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +47,9 @@ fun UserProfileScreen(
     var loading by remember(uid) { mutableStateOf(true) }
     var message by remember(uid) { mutableStateOf("") }
     var addingFriend by remember(uid) { mutableStateOf(false) }
+    var showPrivateMessage by remember(uid) { mutableStateOf(false) }
+    var privateMessage by remember(uid) { mutableStateOf("") }
+    var sendingPrivateMessage by remember(uid) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(uid) {
@@ -180,9 +185,85 @@ fun UserProfileScreen(
                     )
                 }
 
+                Spacer(Modifier.height(8.dp))
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = UserStore.isLogin() && user.uid != UserStore.getUid(),
+                    onClick = {
+                        privateMessage = ""
+                        showPrivateMessage = true
+                    }
+                ) {
+                    Text(
+                        when {
+                            !UserStore.isLogin() -> "登录后可发私信"
+                            user.uid == UserStore.getUid() -> "不能给自己发私信"
+                            else -> "✉️ 发私信"
+                        }
+                    )
+                }
+
                 if (message.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Text(message)
+                }
+
+                if (showPrivateMessage) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            if (!sendingPrivateMessage) showPrivateMessage = false
+                        },
+                        title = { Text("发私信给 ${user.username}") },
+                        text = {
+                            OutlinedTextField(
+                                value = privateMessage,
+                                onValueChange = { privateMessage = it },
+                                label = { Text("私信内容") },
+                                minLines = 3,
+                                maxLines = 6,
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !sendingPrivateMessage
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                enabled = privateMessage.trim().isNotBlank() && !sendingPrivateMessage,
+                                onClick = {
+                                    scope.launch {
+                                        sendingPrivateMessage = true
+                                        try {
+                                            val result = ApiClient.api.sendPrivateMessage(
+                                                uid = user.uid.toString(),
+                                                message = privateMessage.trim()
+                                            )
+                                            if (result.code == 0) {
+                                                message = "私信已发送，可到消息中心查看"
+                                                privateMessage = ""
+                                                showPrivateMessage = false
+                                            } else {
+                                                message = result.message ?: "私信发送失败"
+                                            }
+                                        } catch (e: Exception) {
+                                            message = e.message ?: "私信发送失败，请稍后重试"
+                                        } finally {
+                                            sendingPrivateMessage = false
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(if (sendingPrivateMessage) "发送中…" else "发送")
+                            }
+                        },
+                        dismissButton = {
+                            OutlinedButton(
+                                enabled = !sendingPrivateMessage,
+                                onClick = { showPrivateMessage = false }
+                            ) {
+                                Text("取消")
+                            }
+                        }
+                    )
                 }
             }
 
