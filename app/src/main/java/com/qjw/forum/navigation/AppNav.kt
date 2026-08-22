@@ -398,9 +398,20 @@ fun AppNav(){
                             } else {
                                 "thread/$tid?back=myThreads&pid=$pid"
                             }
-                        }
+                        },
+                        onEditThread = { tid -> page = "editThread/$tid" }
                     )
 
+                }
+
+                // 编辑我的主题
+                page.startsWith("editThread/") -> {
+                    val tid = page.removePrefix("editThread/")
+                    EditPostScreen(
+                        tid = tid,
+                        onBack = { page = "myThreads" },
+                        onSaved = { savedTid -> page = "thread/$savedTid" }
+                    )
                 }
 
                 // 我的回复
@@ -415,7 +426,8 @@ fun AppNav(){
                             } else {
                                 "thread/$tid?back=myReplies&pid=$pid"
                             }
-                        }
+                        },
+                        onEditThread = { }
                     )
 
                 }
