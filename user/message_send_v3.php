@@ -70,14 +70,17 @@ if (!function_exists('uc_pm_send')) {
 /*
  * 交给 Discuz/UCenter 原生逻辑建立会话、写入消息、更新未读数。
  * 不再使用 pre_ucenter_pm_* 的手工 SQL。
+ * 第二个参数必须传接收者 UID；第七个参数 isusername 保持为 0。
  */
 $pmid = intval(uc_pm_send(
     $fromUid,
-    $to['username'],
+    $toUid,
     '',
     $message,
     1,
-    $from['username']
+    0,
+    0,
+    0
 ));
 
 if ($pmid <= 0) {
