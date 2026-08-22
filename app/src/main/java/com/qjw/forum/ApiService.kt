@@ -304,7 +304,7 @@ interface ApiService {
     suspend fun sendPrivateMessage(
         @Field("uid") uid: String,
         @Field("message") message: String
-    ): BaseResponse
+    ): okhttp3.ResponseBody
 
 
     @FormUrlEncoded
