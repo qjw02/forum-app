@@ -74,8 +74,8 @@ if (intval($group['allowvisit']) <= 0) {
 $access = DB::fetch_first(
     "SELECT allowview, allowpost
      FROM " . DB::table('forum_access') . "
-     WHERE fid = %d AND groupid = %d",
-    array($fid, $groupid)
+     WHERE fid = %d AND uid = %d",
+    array($fid, $uid)
 );
 
 if ($access && intval($access['allowview']) <= 0) {
