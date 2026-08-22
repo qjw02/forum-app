@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.qjw.forum.Banner
+import com.qjw.forum.appThumbnailUrl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -89,7 +90,7 @@ fun BannerView(
                     if (!banner.image.isNullOrBlank()) {
                         Spacer(Modifier.width(12.dp))
                         AsyncImage(
-                            model = banner.image,
+                            model = appThumbnailUrl(banner.image, 540) ?: banner.image,
                             contentDescription = banner.subject,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
