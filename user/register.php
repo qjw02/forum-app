@@ -36,6 +36,41 @@ function register_fatal_handler() {
 
 register_shutdown_function('register_fatal_handler');
 
+function register_referral_log($referrerUid, $newUid) {
+    $referrerUid = intval($referrerUid);
+    $newUid = intval($newUid);
+    if ($referrerUid <= 0 || $newUid <= 0 || $referrerUid === $newUid) {
+        return false;
+    }
+
+    $exists = intval(DB::result_first("SELECT uid FROM pre_common_member WHERE uid = %d", array($referrerUid)));
+    if ($exists <= 0) {
+        return false;
+    }
+
+    DB::query("CREATE TABLE IF NOT EXISTS \`pre_app_referral_log\` (
+        \`id\` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        \`referrer_uid\` int(10) unsigned NOT NULL,
+        \`referred_uid\` int(10) unsigned NOT NULL,
+        \`money_reward\` int(10) NOT NULL DEFAULT '50',
+        \`coin_reward\` int(10) NOT NULL DEFAULT '10',
+        \`contribution_reward\` int(10) NOT NULL DEFAULT '1',
+        \`dateline\` int(10) unsigned NOT NULL DEFAULT '0',
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`referred_uid\` (\`referred_uid\`),
+        KEY \`referrer_uid\` (\`referrer_uid\`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8");
+
+    DB::query(
+        "INSERT IGNORE INTO pre_app_referral_log
+         (referrer_uid, referred_uid, money_reward, coin_reward, contribution_reward, dateline)
+         VALUES (%d, %d, 50, 10, 1, %d)",
+        array($referrerUid, $newUid, TIMESTAMP)
+    );
+
+    return true;
+}
+
 define('IN_API', true);
 
 require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
@@ -46,6 +81,8 @@ try {
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    // referid 可由 APP 的推广注册链接传入；未传时保持普通注册流程。
+    $referid = isset($_POST['referid']) ? intval($_POST['referid']) : 0;
 
     if ($username === '' || $password === '' || $email === '') {
         register_response(400, '用户名、密码和邮箱不能为空');
@@ -134,7 +171,15 @@ try {
         DB::insert('common_member_count', array('uid' => $uid));
     }
 
-    register_response(0, '注册成功，请使用新账号登录', array('uid' => $uid));
+    $referralRecorded = false;
+    if ($referid > 0) {
+        $referralRecorded = register_referral_log($referid, $uid);
+    }
+
+    register_response(0, '注册成功，请使用新账号登录', array(
+        'uid' => $uid,
+        'referral_recorded' => $referralRecorded
+    ));
 } catch (Exception $error) {
     register_response(500, '注册服务异常：' . $error->getMessage());
 }
