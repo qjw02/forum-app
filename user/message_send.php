@@ -7,6 +7,8 @@ require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 C::app()->init();
 
 header('Content-Type: application/json; charset=utf-8');
+// 避免可选的推送模块输出 PHP 警告，破坏 APP 所需的 JSON 响应。
+ob_start();
 
 
 // token
@@ -305,6 +307,8 @@ if(is_readable($firebasePush)){
 }
 
 
+// 私信写入成功后，无论推送是否可用都只返回规范 JSON。
+if (ob_get_length()) { ob_clean(); }
 echo json_encode([
 
 'code'=>0,
