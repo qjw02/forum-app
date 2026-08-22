@@ -17,13 +17,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,6 +38,20 @@ fun DraftListScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var drafts by remember { mutableStateOf(PostDraftStore.list(context)) }
+    var forumNames by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            runCatching { ApiClient.api.getForums() }
+                .getOrNull()
+                ?.takeIf { it.code == 0 }
+                ?.data
+                ?.let { list ->
+                    forumNames = list.associate { it.fid to it.name }
+                }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -73,9 +90,13 @@ fun DraftListScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "板块 ID：${draft.forumId ?: "未选择"} · " +
-                                SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
-                                    .format(Date(draft.updatedAt)),
+                            "板块：" + (draft.forumId?.let { forumNames[it] ?: "板块 #$it" } ?: "未选择") + " · " +
+                                if (draft.updatedAt > 0) {
+                                    SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
+                                        .format(Date(draft.updatedAt))
+                                } else {
+                                    "较早保存"
+                                },
                             style = MaterialTheme.typography.bodySmall
                         )
                         Spacer(Modifier.height(10.dp))
