@@ -45,6 +45,9 @@ fun MyContentScreen(
     var deleteTarget by remember { mutableStateOf<MyThreadItem?>(null) }
     var deleting by remember { mutableStateOf(false) }
     var reloadKey by remember(showReplies) { mutableStateOf(0) }
+    var currentPage by remember(showReplies) { mutableStateOf(1) }
+    var totalCount by remember(showReplies) { mutableStateOf(0) }
+    var loadingMore by remember(showReplies) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(showReplies, reloadKey) {
@@ -56,6 +59,8 @@ fun MyContentScreen(
                 val result = ApiClient.api.getMyReplies()
                 if (result.code == 0) {
                     replies = result.data?.list.orEmpty()
+                    totalCount = result.data?.total ?: replies.size
+                    currentPage = 1
                 } else {
                     error = result.message ?: "加载失败"
                 }
@@ -63,6 +68,8 @@ fun MyContentScreen(
                 val result = ApiClient.api.getMyThreads()
                 if (result.code == 0) {
                     threads = result.data?.list.orEmpty()
+                    totalCount = result.data?.total ?: threads.size
+                    currentPage = 1
                 } else {
                     error = result.message ?: "加载失败"
                 }
@@ -132,6 +139,48 @@ fun MyContentScreen(
             else -> threads.forEach { thread ->
                 MyThreadCard(thread, onOpenThread, onEdit = { onEditThread(thread.tid) }, onDelete = { deleteTarget = thread })
                 Spacer(Modifier.height(10.dp))
+            }
+        }
+
+        val loadedCount = if (showReplies) replies.size else threads.size
+        if (!loading && error.isBlank() && loadedCount < totalCount) {
+            Spacer(Modifier.height(14.dp))
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !loadingMore,
+                onClick = {
+                    scope.launch {
+                        loadingMore = true
+                        try {
+                            val nextPage = currentPage + 1
+                            if (showReplies) {
+                                val result = ApiClient.api.getMyReplies(page = nextPage)
+                                if (result.code == 0) {
+                                    replies = replies + result.data?.list.orEmpty()
+                                    totalCount = result.data?.total ?: totalCount
+                                    currentPage = nextPage
+                                } else {
+                                    error = result.message ?: "加载更多失败"
+                                }
+                            } else {
+                                val result = ApiClient.api.getMyThreads(page = nextPage)
+                                if (result.code == 0) {
+                                    threads = threads + result.data?.list.orEmpty()
+                                    totalCount = result.data?.total ?: totalCount
+                                    currentPage = nextPage
+                                } else {
+                                    error = result.message ?: "加载更多失败"
+                                }
+                            }
+                        } catch (e: Exception) {
+                            error = e.message ?: "加载更多失败"
+                        } finally {
+                            loadingMore = false
+                        }
+                    }
+                }
+            ) {
+                Text(if (loadingMore) "加载中…" else "加载更多（已显示 $loadedCount/$totalCount）")
             }
         }
 
