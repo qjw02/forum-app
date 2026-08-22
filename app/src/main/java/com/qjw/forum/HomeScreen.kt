@@ -96,7 +96,10 @@ fun HomeScreen(
                 if (result.code == 0 && result.data != null) {
                     homeData = result.data
                     PostCache.save(result.data.new.orEmpty())
-                    version?.let { ContentCache.saveHome(it, result.data) }
+                    ContentCache.saveHome(
+                        version ?: cachedHome?.version ?: "manual",
+                        result.data
+                    )
                 } else {
                     errorText = result.message ?: "加载失败"
                 }
