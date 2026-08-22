@@ -1,5 +1,7 @@
 package com.qjw.forum
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -36,10 +38,12 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun CreatePost(
     fid: String? = null,
+    draftKeyOverride: String? = null,
     onOpenThread: (String) -> Unit
 ) {
     var forums by remember { mutableStateOf<List<ForumItem>>(emptyList()) }
@@ -55,8 +59,11 @@ fun CreatePost(
     var draftRestored by remember { mutableStateOf(false) }
     var checkingPostPermission by remember { mutableStateOf(false) }
     var canPublish by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableStateOf("") }
     var postPermissionMessage by remember { mutableStateOf("正在检查发布权限...") }
-    val draftKey = remember(fid) { "post_draft_" + (fid ?: "select") }
+    val draftKey = remember(fid, draftKeyOverride) {
+        draftKeyOverride ?: ("post_draft_" + (fid ?: "select"))
+    }
     val images = remember { mutableStateListOf<Uri>() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -313,25 +320,35 @@ fun CreatePost(
                     try {
                         var finalMessage = message
                         images.forEachIndexed { index, uri ->
-                            resultText = "正在上传图片 " + (index + 1) + "/" + images.size + "..."
-                            val file = File(context.cacheDir, "upload_" + System.currentTimeMillis() + ".jpg")
-                            context.contentResolver.openInputStream(uri)?.use { input ->
-                                file.outputStream().use { output -> input.copyTo(output) }
-                            }
+                            val number = index + 1
+                            uploadProgress = "图片 $number/${images.size}：正在压缩..."
+                            resultText = uploadProgress
+                            val file = preparePostImage(context, uri, number)
 
-                            val body = file.asRequestBody("image/*".toMediaTypeOrNull())
-                            val part = MultipartBody.Part.createFormData("file", file.name, body)
-                            val upload = ApiClient.api.uploadImage(part)
+                            try {
+                                uploadProgress = "图片 $number/${images.size}：正在上传（${(number - 1) * 100 / images.size}%）"
+                                resultText = uploadProgress
+                                val body = file.asRequestBody("image/*".toMediaTypeOrNull())
+                                val part = MultipartBody.Part.createFormData("file", file.name, body)
+                                val upload = ApiClient.api.uploadImage(part)
 
-                            if (upload.code == 0) {
+                                if (upload.code != 0 || upload.data?.attachment.isNullOrBlank()) {
+                                    throw IllegalStateException(upload.message ?: "图片上传失败")
+                                }
+
                                 finalMessage += "\n\n[img]" +
                                     DomainManager.getDomain().trimEnd('/') +
                                     "/data/attachment/forum/" +
                                     upload.data?.attachment +
                                     "[/img]"
+                                uploadProgress = "图片 $number/${images.size}：上传完成（${number * 100 / images.size}%）"
+                                resultText = uploadProgress
+                            } finally {
+                                file.delete()
                             }
                         }
 
+                        uploadProgress = ""
                         resultText = "正在发布，请稍候..."
                         val result = ApiClient.api.createPost(
                             fid = forum.fid.toString(),
@@ -356,6 +373,7 @@ fun CreatePost(
                         }
                     } finally {
                         publishing = false
+                        uploadProgress = ""
                     }
                 }
             }
@@ -372,4 +390,35 @@ fun CreatePost(
         Spacer(Modifier.height(10.dp))
         Text(resultText)
     }
+}
+
+
+private fun preparePostImage(context: android.content.Context, uri: Uri, number: Int): File {
+    val type = context.contentResolver.getType(uri).orEmpty()
+    val suffix = if (type.equals("image/gif", ignoreCase = true)) ".gif" else ".jpg"
+    val file = File(context.cacheDir, "post_" + System.currentTimeMillis() + "_" + number + suffix)
+
+    if (suffix == ".gif") {
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            file.outputStream().use { output -> input.copyTo(output) }
+        } ?: throw IllegalStateException("无法读取所选 GIF 图片")
+        return file
+    }
+
+    val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input)
+    } ?: throw IllegalStateException("无法读取所选图片")
+
+    val maxSide = 1920
+    val scale = minOf(1f, maxSide.toFloat() / maxOf(bitmap.width, bitmap.height).toFloat())
+    val output = if (scale < 1f) {
+        Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
+    } else bitmap
+
+    FileOutputStream(file).use { stream ->
+        output.compress(Bitmap.CompressFormat.JPEG, 82, stream)
+    }
+    if (output !== bitmap) output.recycle()
+    bitmap.recycle()
+    return file
 }
