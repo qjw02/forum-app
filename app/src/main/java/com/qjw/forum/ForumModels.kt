@@ -20,11 +20,13 @@ data class BaseResponse(
 
 data class PostResult(
 
-    val tid:Int?,
+    val tid:Int? = null,
 
-    val pid:Int?,
+    val pid:Int? = null,
 
-    val fid:Int?
+    val fid:Int? = null,
+
+    val plid:String? = null
 
 )
 
