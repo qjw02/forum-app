@@ -408,6 +408,7 @@ fun CreatePost(
 
                         if (result.code == 0) {
                             PostCache.clear()
+                            ContentCache.clearForum(forum.fid.toString())
                             PostDraftStore.clear(context, draftKey)
                             result.data?.tid?.let { onOpenThread(it.toString()) }
                         } else {
