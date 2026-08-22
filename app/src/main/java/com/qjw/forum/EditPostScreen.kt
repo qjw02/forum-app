@@ -55,6 +55,13 @@ fun EditPostScreen(
     val newImages = remember { mutableStateListOf<Uri>() }
     val context = androidx.compose.ui.platform.LocalContext.current
 
+    LaunchedEffect(newImages.size) {
+        if (newImages.size > 9) {
+            while (newImages.size > 9) newImages.removeAt(newImages.lastIndex)
+            resultText = "一次最多追加 9 张图片，超出部分已移除"
+        }
+    }
+
     LaunchedEffect(tid) {
         try {
             val result = ApiClient.api.getThread(tid)
