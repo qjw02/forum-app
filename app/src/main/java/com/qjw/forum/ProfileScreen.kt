@@ -3,6 +3,8 @@ package com.qjw.forum
 import android.content.Intent
 import android.net.Uri
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +37,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 @Composable
 fun ProfileScreen(
@@ -52,6 +58,7 @@ fun ProfileScreen(
     var loading by remember(uid) { mutableStateOf(cachedProfile == null) }
     var message by remember(uid) { mutableStateOf("") }
     var refreshing by remember(uid) { mutableStateOf(false) }
+    var uploadingAvatar by remember(uid) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun loadProfile() {
@@ -71,6 +78,39 @@ fun ProfileScreen(
             } finally {
                 loading = false
                 refreshing = false
+            }
+        }
+    }
+
+    val avatarPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        scope.launch {
+            uploadingAvatar = true
+            message = ""
+            val file = File(context.cacheDir, "avatar_" + System.currentTimeMillis() + ".jpg")
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                } ?: throw IllegalStateException("无法读取所选图片")
+
+                val body = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("file", file.name, body)
+                val result = ApiClient.api.uploadAvatar(part)
+                if (result.code == 0) {
+                    ProfileCache.clear()
+                    loadProfile()
+                    message = "头像已更新"
+                } else {
+                    message = result.message ?: "头像上传失败"
+                }
+            } catch (e: Exception) {
+                message = e.message ?: "头像上传失败"
+            } finally {
+                file.delete()
+                uploadingAvatar = false
             }
         }
     }
@@ -116,6 +156,15 @@ fun ProfileScreen(
                             contentDescription = null,
                             modifier = Modifier.size(90.dp)
                         )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            enabled = !uploadingAvatar,
+                            onClick = { avatarPicker.launch("image/*") }
+                        ) {
+                            Text(if (uploadingAvatar) "头像上传中…" else "更换头像")
+                        }
 
                         Spacer(Modifier.height(10.dp))
 
