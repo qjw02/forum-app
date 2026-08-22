@@ -177,7 +177,10 @@ interface ApiService {
         password:String,
 
         @Field("email")
-        email:String
+        email:String,
+
+        @Field("referid")
+        referid:String = ""
 
     ):okhttp3.ResponseBody
 
