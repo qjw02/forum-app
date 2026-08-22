@@ -361,7 +361,8 @@ fun AppNav(){
                 page=="friends" -> {
 
                     FriendsScreen(
-                        onBack = { page="profile" }
+                        onBack = { page="profile" },
+                        onOpenUser = { uid -> page = "userProfile/$uid?from=friends" }
                     )
 
                 }
