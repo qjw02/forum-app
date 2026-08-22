@@ -288,6 +288,23 @@ $to_uid
 
 
 
+// Firebase 离线推送：推送失败不能影响私信发送本身。
+$firebasePush=__DIR__.'/firebase_push.php';
+if(is_readable($firebasePush)){
+    require_once $firebasePush;
+    $senderName=DB::result_first(
+        "SELECT username FROM pre_common_member WHERE uid=%d",
+        array($from_uid)
+    );
+    @fcm_send_to_user(
+        $to_uid,
+        ($senderName ? $senderName : '用户').' 发来一条私信',
+        mb_substr(strip_tags($message), 0, 100, 'utf-8'),
+        array('type'=>'private_message', 'plid'=>$plid, 'from_uid'=>$from_uid)
+    );
+}
+
+
 echo json_encode([
 
 'code'=>0,
