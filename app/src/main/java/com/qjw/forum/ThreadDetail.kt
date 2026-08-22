@@ -2,6 +2,10 @@ package com.qjw.forum
 
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -426,6 +430,15 @@ fun ThreadDetail(
                                     },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    AsyncImage(
+                                        model = threadData.thread.author.avatar,
+                                        contentDescription = threadData.thread.author.username + "的头像",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(38.dp)
+                                            .clip(CircleShape)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
                                     Text("作者：" + threadData.thread.author.username + " · ")
                                     Text(
                                         text = threadData.thread.author.group_name ?: "普通会员",
@@ -847,6 +860,15 @@ fun ThreadDetail(
                                             },
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
+                                            AsyncImage(
+                                                model = reply.author.avatar,
+                                                contentDescription = reply.author.username + "的头像",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .size(34.dp)
+                                                    .clip(CircleShape)
+                                            )
+                                            Spacer(Modifier.width(8.dp))
                                             Text(reply.author.username + " · ")
                                             Text(
                                                 text = reply.author.group_name ?: "普通会员",
