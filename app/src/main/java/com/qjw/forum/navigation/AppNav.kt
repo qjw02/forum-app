@@ -738,6 +738,12 @@ fun AppNav(){
                             .substringBefore("&")
                             .takeIf { it.isNotBlank() }
 
+                    val backTarget =
+                        threadRoute
+                            .substringAfter("back=", "")
+                            .substringBefore("&")
+                            .takeIf { it.isNotBlank() }
+
 
 
                     Log.e(
@@ -764,10 +770,15 @@ fun AppNav(){
 
                         onBack = { forumFid ->
 
-                            page = if (forumFid.isNotBlank()) {
-                                "forumThread/$forumFid"
-                            } else {
-                                "forum"
+                            page = when (backTarget) {
+                                "message" -> "message"
+                                "myThreads" -> "myThreads"
+                                "myReplies" -> "myReplies"
+                                else -> if (forumFid.isNotBlank()) {
+                                    "forumThread/$forumFid"
+                                } else {
+                                    "forum"
+                                }
                             }
 
                         },
