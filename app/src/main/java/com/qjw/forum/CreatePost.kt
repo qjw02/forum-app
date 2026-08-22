@@ -57,6 +57,7 @@ fun CreatePost(
     var publishing by remember { mutableStateOf(false) }
     var showForumMenu by remember { mutableStateOf(false) }
     var draftRestored by remember { mutableStateOf(false) }
+    var draftStatus by remember { mutableStateOf("") }
     var checkingPostPermission by remember { mutableStateOf(false) }
     var canPublish by remember { mutableStateOf(false) }
     var uploadProgress by remember { mutableStateOf("") }
@@ -276,6 +277,45 @@ fun CreatePost(
         }
 
         Spacer(Modifier.height(15.dp))
+
+        Text(
+            text = "内容会自动保存到本机草稿，图片需重新选择。",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !publishing && (subject.isNotBlank() || message.isNotBlank() || contact.isNotBlank()),
+            onClick = {
+                PostDraftStore.save(
+                    context,
+                    draftKey,
+                    PostDraft(
+                        forumId = selectedForum?.fid,
+                        subject = subject,
+                        message = message,
+                        sellContact = sellContact,
+                        contact = contact,
+                        price = priceText
+                    )
+                )
+                draftStatus = "草稿已保存到本机"
+            }
+        ) {
+            Text("保存草稿")
+        }
+
+        if (draftStatus.isNotBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                draftStatus,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
 
         if (subject.isNotBlank() || message.isNotBlank() || contact.isNotBlank()) {
             OutlinedButton(
