@@ -260,6 +260,11 @@ fun AppNav(){
 
                 }
 
+                // VIP 插件购买页
+                page=="vip" -> {
+                    VipPurchaseScreen(onBack = { page = "profile" })
+                }
+
                 // 推广中心
 
                 page=="referral" -> {
@@ -329,6 +334,10 @@ fun AppNav(){
 
                             page="friends"
 
+                        },
+
+                        onVip = {
+                            page = "vip"
                         }
 
 
