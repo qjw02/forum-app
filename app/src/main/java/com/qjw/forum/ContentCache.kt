@@ -78,6 +78,14 @@ object ContentCache {
             ?.putString("thread_data_$tid", gson.toJson(data))
             ?.apply()
     }
+
+    fun clearThread(tid: String) {
+        context
+            ?.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            ?.edit()
+            ?.remove("thread_data_$tid")
+            ?.apply()
+    }
 }
 
 data class CachedHome(
