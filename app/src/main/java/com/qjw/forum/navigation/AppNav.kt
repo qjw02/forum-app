@@ -233,7 +233,9 @@ fun AppNav(){
                                 "thread/$tid?back=message&pid=$pid"
                             }
                         },
-                        onOpenChat = { plid -> page="chat/$plid" }
+                        onOpenChat = { conversation ->
+                            page = "chat/" + conversation.plid + "?uid=" + (conversation.otherUid ?: "")
+                        }
                     )
 
 
@@ -251,10 +253,13 @@ fun AppNav(){
                 // 私信聊天
                 page.startsWith("chat/") -> {
 
-                    val plid = page.removePrefix("chat/")
+                    val chatRoute = page.removePrefix("chat/")
+                    val plid = chatRoute.substringBefore("?")
+                    val otherUid = chatRoute.substringAfter("uid=", "").substringBefore("&").takeIf { it.isNotBlank() }
 
                     PrivateChatScreen(
                         plid = plid,
+                        initialOtherUid = otherUid,
                         onBack = { page="message" },
                         onOpenUser = { uid -> page = "userProfile/$uid?from=chat:$plid" }
                     )
