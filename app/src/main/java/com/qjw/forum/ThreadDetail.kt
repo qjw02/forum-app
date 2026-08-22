@@ -26,7 +26,7 @@ import java.util.Locale
 
 fun formatForumTime(timestamp: Long?): String {
     if (timestamp == null || timestamp <= 0) return ""
-    return SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         .format(Date(timestamp * 1000))
 }
 
@@ -446,7 +446,7 @@ fun ThreadDetail(
                                     )
                                 }
                                 Text(
-                                    text = "发表于 " + formatForumTime(threadData.thread.dateline),
+                                    text = formatForumTime(threadData.thread.dateline),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -876,7 +876,7 @@ fun ThreadDetail(
                                             )
                                         }
                                         Text(
-                                            text = "回复于 " + formatForumTime(reply.dateline),
+                                            text = formatForumTime(reply.dateline),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
