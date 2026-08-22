@@ -4,17 +4,15 @@ package com.qjw.forum
 object ApiConfig {
 
 
-    // 默认API地址
-
+    // 首次启动兜底地址。动态域名配置成功后会自动覆盖，正常使用不依赖此值。
     var baseUrl =
-        ""
+        "https://a3x9r3.cdlf3.com/"
 
 
 
-    // 图片地址
-
+    // 首次启动图片兜底地址；动态配置成功后自动覆盖。
     var imageUrl =
-        ""
+        "https://a3x9r3.cdlf3.com/"
 
 
 
