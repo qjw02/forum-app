@@ -90,14 +90,10 @@ function group_is_in_forum_perm($permissionList, $groupid) {
     return in_array((string)intval($groupid), $groups, true);
 }
 
-if (!group_is_in_forum_perm($forum['viewperm'], $groupid)) {
-    permission_response(403, '当前用户组无权访问该板块');
-}
-if ($access && intval($access['allowview']) <= 0) {
-    permission_response(403, '当前用户无权访问该板块');
-}
-
 /*
+ * 浏览权限继续由论坛原本的访问流程处理。这里仅返回“能否发表主题”，
+ * 避免不同 Discuz 版本的 viewperm 存储格式造成误判。
+ *
  * 同时检查：用户组通用权限、论坛后台“发表权限”名单、单用户特殊权限。
  */
 $allowPost = $uid > 0
