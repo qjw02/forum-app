@@ -86,6 +86,15 @@ object ContentCache {
             ?.remove("thread_data_$tid")
             ?.apply()
     }
+
+    fun clearForum(fid: String) {
+        context
+            ?.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            ?.edit()
+            ?.remove("forum_version_$fid")
+            ?.remove("forum_data_$fid")
+            ?.apply()
+    }
 }
 
 data class CachedHome(
