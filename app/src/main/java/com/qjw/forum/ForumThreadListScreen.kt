@@ -43,10 +43,15 @@ fun ForumThreadListScreen(
     var message by remember(fid) { mutableStateOf("") }
     var canCreatePost by remember(fid) { mutableStateOf(UserStore.isLogin()) }
     var permissionNote by remember(fid) { mutableStateOf("") }
+    var refreshing by remember(fid) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    fun fetchThreads(version: String?) {
+    fun fetchThreads(version: String?, manual: Boolean = false) {
         scope.launch {
+            if (manual) {
+                refreshing = true
+                message = ""
+            }
             try {
                 /*
                  * 权限服务未部署或发生异常时，不能阻断原有的板块浏览。
@@ -66,7 +71,11 @@ fun ForumThreadListScreen(
                 val result = ApiClient.api.getForumThreads(fid)
                 if (result.code == 0 && result.data != null) {
                     forumData = result.data
-                    version?.let { ContentCache.saveForum(fid, it, result.data) }
+                    ContentCache.saveForum(
+                        fid,
+                        version ?: cachedForum?.version ?: "manual",
+                        result.data
+                    )
                 } else {
                     message = result.message ?: "加载失败"
                 }
@@ -74,6 +83,7 @@ fun ForumThreadListScreen(
                 message = "帖子列表暂时加载失败，请稍后重试"
             } finally {
                 loading = false
+                refreshing = false
             }
         }
     }
@@ -137,6 +147,13 @@ fun ForumThreadListScreen(
         ) {
             Button(onClick = onBack) {
                 Text("返回")
+            }
+
+            Button(
+                enabled = !refreshing,
+                onClick = { fetchThreads(version = null, manual = true) }
+            ) {
+                Text(if (refreshing) "刷新中…" else "刷新")
             }
 
             Button(
