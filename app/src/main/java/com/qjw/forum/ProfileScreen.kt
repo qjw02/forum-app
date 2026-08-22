@@ -43,23 +43,31 @@ fun ProfileScreen(
     var profile by remember(uid) { mutableStateOf(cachedProfile) }
     var loading by remember(uid) { mutableStateOf(cachedProfile == null) }
     var message by remember(uid) { mutableStateOf("") }
+    var refreshing by remember(uid) { mutableStateOf(false) }
+
+    fun loadProfile() {
+        kotlinx.coroutines.MainScope().launch {
+            refreshing = true
+            message = ""
+            try {
+                val result = ApiClient.api.profile()
+                if (result.code == 0 && result.data != null) {
+                    profile = result.data
+                    ProfileCache.save(result.data)
+                } else {
+                    message = result.message ?: "加载失败"
+                }
+            } catch (e: Exception) {
+                message = e.message ?: "网络错误"
+            } finally {
+                loading = false
+                refreshing = false
+            }
+        }
+    }
 
     LaunchedEffect(uid) {
-        if (cachedProfile != null) return@LaunchedEffect
-
-        try {
-            val result = ApiClient.api.profile()
-            if (result.code == 0 && result.data != null) {
-                profile = result.data
-                ProfileCache.save(result.data)
-            } else {
-                message = result.message ?: "加载失败"
-            }
-        } catch (e: Exception) {
-            message = e.message ?: "网络错误"
-        } finally {
-            loading = false
-        }
+        if (cachedProfile == null) loadProfile()
     }
 
     Column(
@@ -129,7 +137,17 @@ fun ProfileScreen(
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !refreshing,
+                    onClick = { loadProfile() }
+                ) {
+                    Text(if (refreshing) "刷新资料中…" else "刷新资料")
+                }
+
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     modifier = Modifier.fillMaxWidth(),
