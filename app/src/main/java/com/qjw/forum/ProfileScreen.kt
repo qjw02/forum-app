@@ -38,7 +38,8 @@ fun ProfileScreen(
     onReferral: () -> Unit,
     onMyThreads: () -> Unit,
     onMyReplies: () -> Unit,
-    onFriends: () -> Unit
+    onFriends: () -> Unit,
+    onVip: () -> Unit
 ) {
     val uid = UserStore.getUid()
     val cachedProfile = remember(uid) { ProfileCache.get(uid) }
@@ -151,6 +152,15 @@ fun ProfileScreen(
                 }
 
                 Spacer(Modifier.height(12.dp))
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onVip
+                ) {
+                    Text("⭐ 开通 VIP")
+                }
+
+                Spacer(Modifier.height(10.dp))
 
                 Button(
                     modifier = Modifier.fillMaxWidth(),
