@@ -10,3 +10,6 @@ build/
 # Signing keys
 *.jks
 *.keystore
+
+# Firebase local Android configuration
+google-services.json
