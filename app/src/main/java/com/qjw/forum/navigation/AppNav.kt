@@ -255,7 +255,8 @@ fun AppNav(){
 
                     PrivateChatScreen(
                         plid = plid,
-                        onBack = { page="message" }
+                        onBack = { page="message" },
+                        onOpenUser = { uid -> page = "userProfile/$uid?from=chat:$plid" }
                     )
 
                 }
@@ -283,9 +284,11 @@ fun AppNav(){
                     UserProfileScreen(
                         uid = uid,
                         onBack = {
-                            page = when (fromTid) {
-                                "friends" -> "friends"
-                                else -> if (fromTid.isNotBlank()) "thread/$fromTid" else "home"
+                            page = when {
+                                fromTid == "friends" -> "friends"
+                                fromTid.startsWith("chat:") -> "chat/" + fromTid.removePrefix("chat:")
+                                fromTid.isNotBlank() -> "thread/$fromTid"
+                                else -> "home"
                             }
                         },
                         onOpenChat = { plid -> page = "chat/$plid" }
