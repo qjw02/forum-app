@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MessageScreen(
     onOpenThread: (String, String?) -> Unit,
-    onOpenChat: (String) -> Unit
+    onOpenChat: (PrivateConversation) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) }
@@ -113,7 +113,7 @@ fun MessageScreen(
                 (UnreadStore.privateMessageCount - unread).coerceAtLeast(0)
             )
         }
-        onOpenChat(conversation.plid)
+        onOpenChat(conversation)
     }
 
     Column(
