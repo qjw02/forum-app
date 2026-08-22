@@ -59,29 +59,31 @@ if (!$from || !$to) {
     app_pm_response(404, '接收用户不存在');
 }
 
-$ucClient = '/www/wwwroot/qq/wwwroot/uc_client/client.php';
-if (is_readable($ucClient)) {
-    require_once $ucClient;
-}
-if (!function_exists('uc_pm_send')) {
-    app_pm_response(500, '论坛私信服务未加载，请检查 uc_client 目录');
+/*
+ * 使用 Discuz 网页端同一套 sendpm() 逻辑，让论坛按当前版本的
+ * 私信表结构、好友限制和用户设置处理消息。
+ */
+$coreFunction = '/www/wwwroot/qq/wwwroot/source/function/function_core.php';
+if (!function_exists('sendpm') && is_readable($coreFunction)) {
+    require_once $coreFunction;
 }
 
-/*
- * 交给 Discuz/UCenter 原生逻辑建立会话、写入消息、更新未读数。
- * 不再使用 pre_ucenter_pm_* 的手工 SQL。
- * 第二个参数必须传接收者 UID；第七个参数 isusername 保持为 0。
- */
-$pmid = intval(uc_pm_send(
-    $fromUid,
-    $toUid,
-    '',
-    $message,
-    1,
-    0,
-    0,
-    0
-));
+if (function_exists('sendpm')) {
+    $pmid = intval(sendpm($toUid, '', $message, $fromUid, 0, 0, 0));
+} else {
+    /*
+     * 旧版本的兼容备用：这里的第二个参数必须是 UID，
+     * 不是用户名；第七个参数 isusername 为 0。
+     */
+    $ucClient = '/www/wwwroot/qq/wwwroot/uc_client/client.php';
+    if (is_readable($ucClient)) {
+        require_once $ucClient;
+    }
+    if (!function_exists('uc_pm_send')) {
+        app_pm_response(500, '论坛私信服务未加载，请检查 source/function 目录');
+    }
+    $pmid = intval(uc_pm_send($fromUid, $toUid, '', $message, 1, 0, 0, 0));
+}
 
 if ($pmid <= 0) {
     $messages = array(
