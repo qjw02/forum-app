@@ -553,7 +553,9 @@ fun AppNav(){
 
 
 
-                        }
+                        },
+
+                        onOpenVip = { page = "vip" }
 
 
 
@@ -613,7 +615,9 @@ fun AppNav(){
 
 
 
-                        }
+                        },
+
+                        onOpenVip = { page = "vip" }
 
 
 
