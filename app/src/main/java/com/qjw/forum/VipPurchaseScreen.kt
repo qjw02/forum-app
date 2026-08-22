@@ -2,12 +2,15 @@ package com.qjw.forum
 
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -25,18 +28,37 @@ import androidx.compose.ui.viewinterop.AndroidView
 
 @Composable
 fun VipPurchaseScreen(onBack: () -> Unit) {
-    val pluginUrl = DomainManager.getDomain()
-        .trimEnd('/') + "/plugin.php?id=threed_vip"
+    val siteUrl = DomainManager.getDomain().trimEnd('/')
+    val pluginUrl = "$siteUrl/plugin.php?id=threed_vip"
     var loading by remember { mutableStateOf(true) }
+    var loginInProgress by remember { mutableStateOf(false) }
+    var returnedToPlugin by remember { mutableStateOf(false) }
+    var webView by remember { mutableStateOf<WebView?>(null) }
+
+    fun openPlugin() {
+        loading = true
+        returnedToPlugin = true
+        webView?.loadUrl(pluginUrl)
+    }
 
     Scaffold(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = onBack,
-                    modifier = Modifier.padding(12.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("返回")
+                    Button(onClick = onBack) {
+                        Text("返回")
+                    }
+                    Button(
+                        enabled = !loading,
+                        onClick = { openPlugin() }
+                    ) {
+                        Text("进入 VIP 购买")
+                    }
                 }
 
                 Text(
@@ -45,7 +67,11 @@ fun VipPurchaseScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Text(
-                    text = "VIP 套餐与支付由论坛现有插件提供。",
+                    text = if (loginInProgress) {
+                        "登录成功后将自动进入 VIP 购买页面。"
+                    } else {
+                        "VIP 套餐与支付由论坛现有插件提供。"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -67,14 +93,43 @@ fun VipPurchaseScreen(onBack: () -> Unit) {
                 .padding(padding),
             factory = { context ->
                 WebView(context).apply {
+                    webView = this
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
                     settings.allowFileAccess = false
                     CookieManager.getInstance().setAcceptCookie(true)
                     webChromeClient = WebChromeClient()
                     webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(
+                            view: WebView?,
+                            request: WebResourceRequest?
+                        ): Boolean {
+                            val url = request?.url?.toString().orEmpty()
+                            if (url.contains("member.php?mod=logging")) {
+                                loginInProgress = true
+                                returnedToPlugin = false
+                            }
+                            return false
+                        }
+
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
+                            val currentUrl = url.orEmpty()
+                            val cookies = CookieManager.getInstance()
+                                .getCookie(siteUrl)
+                                .orEmpty()
+
+                            // Discuz 登录 Cookie 通常以 auth 结尾；检测到后只自动跳回一次。
+                            if (
+                                loginInProgress &&
+                                !returnedToPlugin &&
+                                !currentUrl.contains("plugin.php?id=threed_vip") &&
+                                cookies.contains("auth=")
+                            ) {
+                                returnedToPlugin = true
+                                loading = true
+                                view?.loadUrl(pluginUrl)
+                            }
                             super.onPageFinished(view, url)
                         }
                     }
