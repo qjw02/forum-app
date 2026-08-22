@@ -1,5 +1,8 @@
 package com.qjw.forum
 
+import android.content.Intent
+import android.net.Uri
+
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -41,6 +45,7 @@ fun ProfileScreen(
     onFriends: () -> Unit,
     onVip: () -> Unit
 ) {
+    val context = LocalContext.current
     val uid = UserStore.getUid()
     val cachedProfile = remember(uid) { ProfileCache.get(uid) }
     var profile by remember(uid) { mutableStateOf(cachedProfile) }
@@ -183,6 +188,25 @@ fun ProfileScreen(
                 ProfileAction("💬 我的回复", onMyReplies)
                 Spacer(Modifier.height(10.dp))
                 ProfileAction("👥 好友管理", onFriends)
+
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val websiteUrl = DomainManager.getDomain().trimEnd('/') + "/"
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl))
+                        )
+                    }
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🌐 网页版入口")
+                        Text(
+                            text = "更多功能请使用网页版",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
 
                 Spacer(Modifier.height(30.dp))
 
