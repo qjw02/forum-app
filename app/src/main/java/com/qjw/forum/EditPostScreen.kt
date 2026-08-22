@@ -141,7 +141,14 @@ fun EditPostScreen(
                                 uploadProgress = "正在上传新图片 $number/${newImages.size}…"
                                 val file = preparePostImage(context, uri, number)
                                 try {
-                                    val body = file.asRequestBody("image/*".toMediaTypeOrNull())
+                                    val body = UploadProgressRequestBody(
+                                        file,
+                                        "image/*".toMediaTypeOrNull()
+                                    ) { sent, total ->
+                                        val current = if (total > 0) (sent * 100 / total).toInt() else 0
+                                        val overall = ((index * 100) + current) / newImages.size
+                                        uploadProgress = "正在上传新图片 $number/${newImages.size}（$overall%）"
+                                    }
                                     val part = MultipartBody.Part.createFormData("file", file.name, body)
                                     val upload = ApiClient.api.uploadImage(part)
                                     if (upload.code != 0 || upload.data?.attachment.isNullOrBlank()) {
