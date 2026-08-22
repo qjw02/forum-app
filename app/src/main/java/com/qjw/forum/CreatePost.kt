@@ -368,7 +368,15 @@ fun CreatePost(
                             try {
                                 uploadProgress = "图片 $number/${images.size}：正在上传（${(number - 1) * 100 / images.size}%）"
                                 resultText = uploadProgress
-                                val body = file.asRequestBody("image/*".toMediaTypeOrNull())
+                                val body = UploadProgressRequestBody(
+                                    file,
+                                    "image/*".toMediaTypeOrNull()
+                                ) { sent, total ->
+                                    val current = if (total > 0) (sent * 100 / total).toInt() else 0
+                                    val overall = ((index * 100) + current) / images.size
+                                    uploadProgress = "图片 $number/${images.size}：上传中（$overall%）"
+                                    resultText = uploadProgress
+                                }
                                 val part = MultipartBody.Part.createFormData("file", file.name, body)
                                 val upload = ApiClient.api.uploadImage(part)
 
