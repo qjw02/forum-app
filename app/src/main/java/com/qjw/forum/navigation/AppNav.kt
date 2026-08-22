@@ -283,7 +283,10 @@ fun AppNav(){
                     UserProfileScreen(
                         uid = uid,
                         onBack = {
-                            page = if (fromTid.isNotBlank()) "thread/$fromTid" else "home"
+                            page = when (fromTid) {
+                                "friends" -> "friends"
+                                else -> if (fromTid.isNotBlank()) "thread/$fromTid" else "home"
+                            }
                         }
                     )
                 }
