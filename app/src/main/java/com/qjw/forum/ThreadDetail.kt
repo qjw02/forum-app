@@ -130,6 +130,10 @@ fun ThreadDetail(
 
     }
 
+    var refreshing by remember(tid) {
+        mutableStateOf(false)
+    }
+
 
 
     var replyPage by remember { mutableStateOf(1) }
@@ -162,11 +166,15 @@ fun ThreadDetail(
 
 
 
-    fun loadThread(){
+    fun loadThread(manual: Boolean = false){
 
 
         scope.launch{
 
+            if (manual) {
+                refreshing = true
+                replyMsg = ""
+            }
 
             try{
 
@@ -230,6 +238,7 @@ fun ThreadDetail(
 
 
             loading=false
+            refreshing=false
 
 
 
@@ -311,21 +320,26 @@ fun ThreadDetail(
 
 
 
-            Button(
-
-                modifier =
-                    Modifier.padding(10.dp),
-
-                onClick = {
-
-                    onBack(data?.thread?.fid ?: "")
-
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = {
+                        onBack(data?.thread?.fid ?: "")
+                    }
+                ) {
+                    Text("返回")
                 }
 
-            ){
-
-                Text("返回")
-
+                Button(
+                    enabled = !refreshing,
+                    onClick = { loadThread(manual = true) }
+                ) {
+                    Text(if (refreshing) "刷新中…" else "刷新")
+                }
             }
 
 
