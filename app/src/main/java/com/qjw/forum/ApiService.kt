@@ -300,7 +300,7 @@ interface ApiService {
     ): PrivateMessageDetailResponse
 
     @FormUrlEncoded
-    @POST("api/user/message_send.php")
+    @POST("api/user/message_send_v2.php")
     suspend fun sendPrivateMessage(
         @Field("uid") uid: String,
         @Field("message") message: String
