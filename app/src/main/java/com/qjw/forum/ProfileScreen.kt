@@ -24,11 +24,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
@@ -44,9 +46,10 @@ fun ProfileScreen(
     var loading by remember(uid) { mutableStateOf(cachedProfile == null) }
     var message by remember(uid) { mutableStateOf("") }
     var refreshing by remember(uid) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     fun loadProfile() {
-        kotlinx.coroutines.MainScope().launch {
+        scope.launch {
             refreshing = true
             message = ""
             try {
