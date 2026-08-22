@@ -562,7 +562,13 @@ data class PrivateConversation(
     val plid: String,
     val subject: String?,
     val message: String?,
-    val unread: Int?
+    val unread: Int?,
+    @SerializedName("other_uid")
+    val otherUid: String? = null,
+    @SerializedName("other_name")
+    val otherName: String? = null,
+    val avatar: String? = null,
+    val dateline: Long? = null
 )
 
 data class PrivateMessageDetailResponse(
