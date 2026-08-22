@@ -1,5 +1,7 @@
 package com.qjw.forum
 
+import android.net.Uri
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,11 +20,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.qjw.forum.component.ImagePicker
+import com.qjw.forum.component.ImagePreview
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import com.qjw.forum.component.ImageViewer
 import kotlinx.coroutines.launch
 
@@ -38,7 +46,10 @@ fun EditPostScreen(
     var subject by remember(tid) { mutableStateOf("") }
     var message by remember(tid) { mutableStateOf("") }
     var originalImages by remember(tid) { mutableStateOf<List<String>>(emptyList()) }
+    var uploadProgress by remember(tid) { mutableStateOf("") }
     var resultText by remember(tid) { mutableStateOf("") }
+    val newImages = remember { mutableStateListOf<Uri>() }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(tid) {
         try {
@@ -98,6 +109,14 @@ fun EditPostScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving
             )
+            Spacer(Modifier.height(14.dp))
+            Text("追加图片", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            ImagePicker(images = newImages, onChange = {})
+            if (newImages.isNotEmpty()) {
+                ImagePreview(images = newImages, onRemove = { index -> newImages.removeAt(index) })
+            }
+
             Spacer(Modifier.height(16.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
@@ -107,7 +126,29 @@ fun EditPostScreen(
                         saving = true
                         resultText = ""
                         try {
-                            val result = ApiClient.api.editPost(tid, subject.trim(), message.trim())
+                            var finalMessage = message.trim()
+                            newImages.forEachIndexed { index, uri ->
+                                val number = index + 1
+                                uploadProgress = "正在上传新图片 $number/${newImages.size}…"
+                                val file = preparePostImage(context, uri, number)
+                                try {
+                                    val body = file.asRequestBody("image/*".toMediaTypeOrNull())
+                                    val part = MultipartBody.Part.createFormData("file", file.name, body)
+                                    val upload = ApiClient.api.uploadImage(part)
+                                    if (upload.code != 0 || upload.data?.attachment.isNullOrBlank()) {
+                                        throw IllegalStateException(upload.message ?: "图片上传失败")
+                                    }
+                                    finalMessage += "\n\n[img]" +
+                                        DomainManager.getDomain().trimEnd('/') +
+                                        "/data/attachment/forum/" +
+                                        upload.data?.attachment +
+                                        "[/img]"
+                                } finally {
+                                    file.delete()
+                                }
+                            }
+                            uploadProgress = ""
+                            val result = ApiClient.api.editPost(tid, subject.trim(), finalMessage)
                             if (result.code == 0) {
                                 ContentCache.clearThread(tid)
                                 PostCache.clear()
@@ -119,10 +160,16 @@ fun EditPostScreen(
                             resultText = e.message ?: "保存失败"
                         } finally {
                             saving = false
+                            uploadProgress = ""
                         }
                     }
                 }
             ) { Text(if (saving) "保存中…" else "保存修改") }
+        }
+
+        if (uploadProgress.isNotBlank()) {
+            Spacer(Modifier.height(8.dp))
+            Text(uploadProgress, color = MaterialTheme.colorScheme.primary)
         }
 
         if (resultText.isNotBlank()) {
