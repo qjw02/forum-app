@@ -17,18 +17,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,6 +44,8 @@ fun UserProfileScreen(
     var profile by remember(uid) { mutableStateOf<PublicProfileData?>(null) }
     var loading by remember(uid) { mutableStateOf(true) }
     var message by remember(uid) { mutableStateOf("") }
+    var addingFriend by remember(uid) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(uid) {
         try {
@@ -137,6 +142,47 @@ fun UserProfileScreen(
                             )
                         }
                     }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = UserStore.isLogin() && !addingFriend && user.uid != UserStore.getUid(),
+                    onClick = {
+                        scope.launch {
+                            addingFriend = true
+                            try {
+                                val result = ApiClient.api.friendAction(
+                                    action = "add",
+                                    uid = user.uid.toString()
+                                )
+                                message = result.message ?: if (result.code == 0) {
+                                    "好友申请已发送"
+                                } else {
+                                    "操作失败"
+                                }
+                            } catch (e: Exception) {
+                                message = e.message ?: "好友申请发送失败"
+                            } finally {
+                                addingFriend = false
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        when {
+                            !UserStore.isLogin() -> "登录后可添加好友"
+                            addingFriend -> "正在发送申请…"
+                            user.uid == UserStore.getUid() -> "这是我的主页"
+                            else -> "👥 添加好友"
+                        }
+                    )
+                }
+
+                if (message.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(message)
                 }
             }
 
