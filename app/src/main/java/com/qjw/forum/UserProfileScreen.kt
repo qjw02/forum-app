@@ -192,6 +192,8 @@ fun UserProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = UserStore.isLogin() && user.uid != UserStore.getUid(),
                     onClick = {
+                        // 清除上一次操作的旧提示，避免和本次私信发送混淆。
+                        message = ""
                         privateMessage = ""
                         showPrivateMessage = true
                     }
