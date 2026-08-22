@@ -337,6 +337,10 @@ fun AppNav(){
 
                         },
 
+                        onDrafts = {
+                            page = "drafts"
+                        },
+
                         onFriends = {
 
                             page="friends"
@@ -363,6 +367,14 @@ fun AppNav(){
 
 
 
+
+                // 本机草稿
+                page=="drafts" -> {
+                    DraftListScreen(
+                        onBack = { page = "profile" },
+                        onEditDraft = { key -> page = "createDraft/$key" }
+                    )
+                }
 
                 // 好友管理
                 page=="friends" -> {
@@ -536,6 +548,16 @@ fun AppNav(){
 
 
 
+
+                // 从本机草稿继续编辑
+                page.startsWith("createDraft/") -> {
+                    val key = page.removePrefix("createDraft/")
+                    CreatePost(
+                        fid = null,
+                        draftKeyOverride = key,
+                        onOpenThread = { tid -> page = "thread/$tid" }
+                    )
+                }
 
                 // 板块进入发布 create/fid
 
