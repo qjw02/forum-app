@@ -40,6 +40,7 @@ import java.util.Locale
 @Composable
 fun PrivateChatScreen(
     plid: String,
+    initialOtherUid: String? = null,
     onBack: () -> Unit,
     onOpenUser: (String) -> Unit
 ) {
@@ -83,7 +84,7 @@ fun PrivateChatScreen(
         }
     }
 
-    val otherUid = messages
+    val otherUid = initialOtherUid ?: messages
         .firstOrNull { it.uid != currentUid }
         ?.uid
 
