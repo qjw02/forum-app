@@ -197,10 +197,10 @@ fun EditPostScreen(
                                 PostCache.clear()
                                 onSaved(tid)
                             } else {
-                                resultText = result.message ?: "保存失败"
+                                resultText = "保存失败，当前编辑内容已保留，可直接重试：${result.message ?: "服务器未说明原因"}"
                             }
                         } catch (e: Exception) {
-                            resultText = e.message ?: "保存失败"
+                            resultText = "保存失败，当前编辑内容已保留，可直接重试：${e.message ?: "网络异常"}"
                         } finally {
                             saving = false
                             uploadProgress = ""
