@@ -287,7 +287,8 @@ fun AppNav(){
                                 "friends" -> "friends"
                                 else -> if (fromTid.isNotBlank()) "thread/$fromTid" else "home"
                             }
-                        }
+                        },
+                        onOpenChat = { plid -> page = "chat/$plid" }
                     )
                 }
 
