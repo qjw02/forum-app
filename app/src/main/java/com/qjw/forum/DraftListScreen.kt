@@ -76,8 +76,15 @@ fun DraftListScreen(
         } else {
             drafts.forEach { item ->
                 val draft = item.draft
+                val isEditDraft = item.key.startsWith("edit_draft_")
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            if (isEditDraft) "编辑主题草稿" else "新主题草稿",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.height(4.dp))
                         Text(
                             draft.subject.ifBlank { "未填写标题" },
                             fontWeight = FontWeight.Bold
@@ -110,7 +117,7 @@ fun DraftListScreen(
                                     drafts = PostDraftStore.list(context)
                                 }
                             ) { Text("删除") }
-                            Button(onClick = { onEditDraft(item.key) }) { Text("继续编辑") }
+                            Button(onClick = { onEditDraft(item.key) }) { Text(if (isEditDraft) "继续修改" else "继续编辑") }
                         }
                     }
                 }
