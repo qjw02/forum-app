@@ -134,11 +134,26 @@ foreach($rows as $row){
 
 
 
+    // 获取会话的另一位成员，供 APP 展示头像和昵称。
+    $other=DB::fetch_first(
+        "SELECT pm.uid, u.username
+         FROM pre_ucenter_pm_members pm
+         LEFT JOIN pre_common_member u ON u.uid=pm.uid
+         WHERE pm.plid=%d AND pm.uid<>%d
+         LIMIT 1",
+        array($row['plid'], $uid)
+    );
+
+    $otherUid=intval($other['uid'] ?? 0);
+    $avatar=$otherUid > 0
+        ? $_G['siteurl'].'uc_server/avatar.php?uid='.$otherUid.'&size=middle'
+        : '';
+
     $list[]=array(
 
         'plid'=>$row['plid'],
 
-        'subject'=>$row['subject'],
+        'subject'=>$other['username'] ?: $row['subject'],
 
         'message'=>$message,
 
@@ -146,7 +161,13 @@ foreach($rows as $row){
 
         'count'=>$row['pmnum'],
 
-        'dateline'=>$row['dateline']
+        'dateline'=>intval($row['dateline']),
+
+        'other_uid'=>$otherUid,
+
+        'other_name'=>$other['username'] ?: '',
+
+        'avatar'=>$avatar
 
     );
 
