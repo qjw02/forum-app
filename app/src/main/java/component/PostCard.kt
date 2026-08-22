@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.qjw.forum.Post
+import com.qjw.forum.appThumbnailUrl
 
 @Composable
 fun PostCard(
@@ -69,7 +70,7 @@ fun PostCard(
             if (!post.image.isNullOrBlank()) {
                 Spacer(Modifier.width(12.dp))
                 AsyncImage(
-                    model = post.image,
+                    model = appThumbnailUrl(post.image, 360) ?: post.image,
                     contentDescription = post.subject,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(width = 82.dp, height = 62.dp)
