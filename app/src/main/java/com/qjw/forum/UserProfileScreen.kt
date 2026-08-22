@@ -236,9 +236,11 @@ fun UserProfileScreen(
                                     scope.launch {
                                         sendingPrivateMessage = true
                                         try {
-                                            val result = ApiClient.api.sendPrivateMessage(
-                                                uid = user.uid.toString(),
-                                                message = privateMessage.trim()
+                                            val result = parsePrivateMessageResponse(
+                                                ApiClient.api.sendPrivateMessage(
+                                                    uid = user.uid.toString(),
+                                                    message = privateMessage.trim()
+                                                )
                                             )
                                             if (result.code == 0) {
                                                 privateMessage = ""
