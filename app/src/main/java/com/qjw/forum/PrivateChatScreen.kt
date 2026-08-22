@@ -184,13 +184,14 @@ fun PrivateChatScreen(
                     try {
                         val result = ApiClient.api.sendPrivateMessage(targetUid, message)
                         if (result.code != 0) {
-                            error = result.message ?: "发送失败"
+                            error = "发送失败，消息内容已保留，点击发送可重试：${result.message ?: "服务器未说明原因"}"
                             input = message
                         } else {
+                            error = ""
                             loadMessages()
                         }
                     } catch (e: Exception) {
-                        error = e.message ?: "发送失败"
+                        error = "发送失败，消息内容已保留，点击发送可重试：${e.message ?: "网络异常"}"
                         input = message
                     } finally {
                         sending = false
