@@ -307,6 +307,12 @@ interface ApiService {
     ): BaseResponse
 
 
+    @FormUrlEncoded
+    @POST("api/user/push_token.php")
+    suspend fun registerPushToken(
+        @Field("token") token: String
+    ): BaseResponse
+
     @GET("api/user/referral_stats.php")
     suspend fun getReferralStats(): ReferralStatsResponse
 
