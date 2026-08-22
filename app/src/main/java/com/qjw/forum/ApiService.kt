@@ -260,6 +260,20 @@ interface ApiService {
         @Query("page_size") pageSize: Int = 20
     ): MyRepliesResponse
 
+    @FormUrlEncoded
+    @POST("api/forum/edit_post.php")
+    suspend fun editPost(
+        @Field("tid") tid: String,
+        @Field("subject") subject: String,
+        @Field("message") message: String
+    ): BaseResponse
+
+    @FormUrlEncoded
+    @POST("api/forum/delete_post.php")
+    suspend fun deletePost(
+        @Field("tid") tid: String
+    ): BaseResponse
+
 
     @GET("api/user/notice.php")
     suspend fun getNotifications(
