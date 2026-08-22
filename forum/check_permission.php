@@ -31,7 +31,10 @@ if ($fid <= 0) {
 }
 
 $forum = DB::fetch_first(
-    "SELECT fid FROM " . DB::table('forum_forum') . " WHERE fid = %d AND type = 'forum'",
+    "SELECT f.fid, ff.viewperm, ff.postperm
+     FROM " . DB::table('forum_forum') . " f
+     LEFT JOIN " . DB::table('forum_forumfield') . " ff ON ff.fid = f.fid
+     WHERE f.fid = %d AND f.type = 'forum'",
     array($fid)
 );
 if (!$forum) {
@@ -78,15 +81,28 @@ $access = DB::fetch_first(
     array($fid, $uid)
 );
 
-if ($access && intval($access['allowview']) <= 0) {
+function group_is_in_forum_perm($permissionList, $groupid) {
+    $permissionList = trim(str_replace(',', ' ', (string)$permissionList));
+    if ($permissionList === '') {
+        return true; // 后台未限定用户组时，沿用用户组的通用权限。
+    }
+    $groups = preg_split('/\\s+/', $permissionList);
+    return in_array((string)intval($groupid), $groups, true);
+}
+
+if (!group_is_in_forum_perm($forum['viewperm'], $groupid)) {
     permission_response(403, '当前用户组无权访问该板块');
+}
+if ($access && intval($access['allowview']) <= 0) {
+    permission_response(403, '当前用户无权访问该板块');
 }
 
 /*
- * 权限完全以 Discuz 后台的“用户组”和“板块权限”为准。
- * APP 仅显示结果；post.php 会作同样的最终拦截。
+ * 同时检查：用户组通用权限、论坛后台“发表权限”名单、单用户特殊权限。
  */
-$allowPost = $uid > 0 && intval($group['allowpost']) > 0;
+$allowPost = $uid > 0
+    && intval($group['allowpost']) > 0
+    && group_is_in_forum_perm($forum['postperm'], $groupid);
 if ($access && intval($access['allowpost']) <= 0) {
     $allowPost = false;
 }
