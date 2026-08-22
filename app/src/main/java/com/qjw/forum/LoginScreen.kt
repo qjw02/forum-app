@@ -91,6 +91,7 @@ fun LoginScreen(
                                 token = result.data.token
                             )
                             ProfileCache.clear(result.data.uid)
+                            PushTokenManager.uploadCurrentToken()
                             onLoginSuccess()
                         } else {
                             message = result.message ?: "登录失败"
