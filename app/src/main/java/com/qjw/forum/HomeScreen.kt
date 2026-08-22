@@ -82,10 +82,15 @@ fun HomeScreen(
     var searching by remember { mutableStateOf(false) }
     var searchMessage by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<Post>>(emptyList()) }
+    var refreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    fun fetchHome(version: String?) {
+    fun fetchHome(version: String?, manual: Boolean = false) {
         scope.launch {
+            if (manual) {
+                refreshing = true
+                errorText = ""
+            }
             try {
                 val result = ApiClient.api.getHomeIndex()
                 if (result.code == 0 && result.data != null) {
@@ -99,6 +104,7 @@ fun HomeScreen(
                 errorText = e.message ?: "网络错误"
             } finally {
                 loading = false
+                refreshing = false
             }
         }
     }
@@ -167,10 +173,18 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("QJWForum", style = MaterialTheme.typography.titleLarge)
-                        Button(onClick = {
-                            showSearch = true
-                            searchMessage = ""
-                        }) { Text("🔍 搜索") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                enabled = !refreshing,
+                                onClick = { fetchHome(version = null, manual = true) }
+                            ) {
+                                Text(if (refreshing) "刷新中…" else "刷新")
+                            }
+                            Button(onClick = {
+                                showSearch = true
+                                searchMessage = ""
+                            }) { Text("🔍 搜索") }
+                        }
                     }
                 }
 
