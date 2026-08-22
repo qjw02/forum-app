@@ -479,6 +479,7 @@ data class MyThreadsData(
 
 data class MyThreadItem(
     val tid: String,
+    val fid: Int? = null,
     val subject: String,
     val views: Int?,
     val replies: Int?
