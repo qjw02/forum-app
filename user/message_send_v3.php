@@ -60,30 +60,73 @@ if (!$from || !$to) {
 }
 
 /*
- * 使用 Discuz 网页端同一套 sendpm() 逻辑，让论坛按当前版本的
- * 私信表结构、好友限制和用户设置处理消息。
+ * 本站的 UCenter 私信远程接口会拒绝 API 调用，因此在论坛本地
+ * 私信表中写入。查找会话只使用当前数据库已经存在的 plid / uid
+ * 字段，不使用某些版本没有的 min_max 字段。
  */
-$coreFunction = '/www/wwwroot/qq/wwwroot/source/function/function_core.php';
-if (!function_exists('sendpm') && is_readable($coreFunction)) {
-    require_once $coreFunction;
+$conversation = DB::fetch_first(
+    'SELECT l.plid
+     FROM pre_ucenter_pm_lists l
+     INNER JOIN pre_ucenter_pm_members sender ON sender.plid=l.plid AND sender.uid=%d
+     INNER JOIN pre_ucenter_pm_members receiver ON receiver.plid=l.plid AND receiver.uid=%d
+     WHERE l.pmtype=1
+     ORDER BY l.dateline DESC
+     LIMIT 1',
+    array($fromUid, $toUid)
+);
+
+if ($conversation) {
+    $plid = intval($conversation['plid']);
+} else {
+    DB::insert('ucenter_pm_lists', array(
+        'authorid' => $fromUid,
+        'pmtype' => 1,
+        'subject' => mb_substr($message, 0, 80, 'UTF-8'),
+        'members' => 2,
+        'dateline' => TIMESTAMP,
+        'lastmessage' => $message
+    ));
+    $plid = intval(DB::insert_id());
+
+    DB::insert('ucenter_pm_members', array(
+        'plid' => $plid,
+        'uid' => $fromUid,
+        'isnew' => 0,
+        'pmnum' => 1,
+        'lastupdate' => TIMESTAMP,
+        'lastdateline' => TIMESTAMP
+    ));
+    DB::insert('ucenter_pm_members', array(
+        'plid' => $plid,
+        'uid' => $toUid,
+        'isnew' => 1,
+        'pmnum' => 1,
+        'lastupdate' => TIMESTAMP,
+        'lastdateline' => TIMESTAMP
+    ));
 }
 
-if (function_exists('sendpm')) {
-    $pmid = intval(sendpm($toUid, '', $message, $fromUid, 0, 0, 0));
-} else {
-    /*
-     * 旧版本的兼容备用：这里的第二个参数必须是 UID，
-     * 不是用户名；第七个参数 isusername 为 0。
-     */
-    $ucClient = '/www/wwwroot/qq/wwwroot/uc_client/client.php';
-    if (is_readable($ucClient)) {
-        require_once $ucClient;
-    }
-    if (!function_exists('uc_pm_send')) {
-        app_pm_response(500, '论坛私信服务未加载，请检查 source/function 目录');
-    }
-    $pmid = intval(uc_pm_send($fromUid, $toUid, '', $message, 1, 0, 0, 0));
-}
+$messageTable = 'ucenter_pm_messages_'.($plid % 10);
+DB::insert($messageTable, array(
+    'plid' => $plid,
+    'authorid' => $fromUid,
+    'message' => $message,
+    'delstatus' => 0,
+    'dateline' => TIMESTAMP
+));
+
+DB::query(
+    'UPDATE pre_ucenter_pm_lists SET lastmessage=%s, dateline=%d WHERE plid=%d',
+    array($message, TIMESTAMP, $plid)
+);
+DB::query(
+    'UPDATE pre_ucenter_pm_members
+     SET isnew=1, lastupdate=%d, lastdateline=%d, pmnum=pmnum+1
+     WHERE plid=%d AND uid=%d',
+    array(TIMESTAMP, TIMESTAMP, $plid, $toUid)
+);
+
+$pmid = $plid;
 
 if ($pmid <= 0) {
     $messages = array(
