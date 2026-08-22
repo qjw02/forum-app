@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.qjw.forum.component.ImageViewer
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,6 +37,7 @@ fun EditPostScreen(
     var saving by remember(tid) { mutableStateOf(false) }
     var subject by remember(tid) { mutableStateOf("") }
     var message by remember(tid) { mutableStateOf("") }
+    var originalImages by remember(tid) { mutableStateOf<List<String>>(emptyList()) }
     var resultText by remember(tid) { mutableStateOf("") }
 
     LaunchedEffect(tid) {
@@ -45,6 +47,7 @@ fun EditPostScreen(
                 subject = result.data.thread.subject
                 message = result.data.thread.rawContent
                     ?: cleanDiscuzText(result.data.thread.content)
+                originalImages = result.data.thread.images
             } else {
                 resultText = result.message ?: "主题加载失败"
             }
@@ -86,6 +89,14 @@ fun EditPostScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving
             )
+            if (originalImages.isNotEmpty()) {
+                Spacer(Modifier.height(14.dp))
+                Text("已有图片（保存修改后会保留）", style = MaterialTheme.typography.titleSmall)
+                originalImages.forEach { imageUrl ->
+                    Spacer(Modifier.height(8.dp))
+                    ImageViewer(url = imageUrl)
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
