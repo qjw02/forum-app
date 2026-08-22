@@ -136,6 +136,31 @@ DB::query(
     array(TIMESTAMP, TIMESTAMP, $plid, $toUid)
 );
 
+/*
+ * 推送属于附加能力；不论 Firebase 服务是否可用，已成功写入的私信
+ * 都必须照常返回发送成功。
+ */
+$pushHelper = __DIR__.'/firebase_push.php';
+if (is_readable($pushHelper)) {
+    try {
+        require_once $pushHelper;
+        if (function_exists('fcm_send_to_user')) {
+            fcm_send_to_user(
+                $toUid,
+                $from['username'].' 发来私信',
+                mb_substr($message, 0, 100, 'UTF-8'),
+                array(
+                    'type' => 'private_message',
+                    'plid' => $plid,
+                    'uid' => $fromUid
+                )
+            );
+        }
+    } catch (Throwable $ignored) {
+        // 推送失败不影响私信本身。
+    }
+}
+
 $pmid = $plid;
 
 if ($pmid <= 0) {
