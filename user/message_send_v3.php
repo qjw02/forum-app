@@ -107,7 +107,17 @@ if ($conversation) {
 }
 
 $messageTable = 'ucenter_pm_messages_'.($plid % 10);
+
+/*
+ * 当前论坛的私信分表 pmid 没有自动递增属性，未传入时会默认为 0，
+ * 从而触发主键重复。按当前分表的最大编号生成下一条编号。
+ */
+$nextPmid = intval(DB::result_first(
+    'SELECT IFNULL(MAX(pmid), 0) + 1 FROM pre_'.$messageTable
+));
+
 DB::insert($messageTable, array(
+    'pmid' => $nextPmid,
     'plid' => $plid,
     'authorid' => $fromUid,
     'message' => $message,
