@@ -5,15 +5,13 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,40 +29,42 @@ fun VipPurchaseScreen(onBack: () -> Unit) {
         .trimEnd('/') + "/plugin.php?id=threed_vip"
     var loading by remember { mutableStateOf(true) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Button(
-            onClick = onBack,
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Text("返回")
+    Scaffold(
+        topBar = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onBack,
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    Text("返回")
+                }
+
+                Text(
+                    text = "开通 VIP",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Text(
+                    text = "VIP 套餐与支付由论坛现有插件提供。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+
+                if (loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(vertical = 8.dp)
+                    )
+                }
+            }
         }
-
-        Text(
-            text = "开通 VIP",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        Text(
-            text = "VIP 套餐与支付由论坛现有插件提供。",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        )
-
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 8.dp)
-            )
-        }
-
-        Spacer(Modifier.height(6.dp))
-
+    ) { padding ->
         AndroidView(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .fillMaxSize()
+                .padding(padding),
             factory = { context ->
                 WebView(context).apply {
                     settings.javaScriptEnabled = true
