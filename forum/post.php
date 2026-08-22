@@ -118,10 +118,11 @@ if(!$member){
 
 $forum=DB::fetch_first(
 
-    "SELECT fid,name
-     FROM ".DB::table('forum_forum')."
-     WHERE fid=%d
-     AND type='forum'",
+    "SELECT f.fid, f.name, ff.postperm
+     FROM ".DB::table('forum_forum')." f
+     LEFT JOIN ".DB::table('forum_forumfield')." ff ON ff.fid = f.fid
+     WHERE f.fid=%d
+     AND f.type='forum'",
 
     array($fid)
 
@@ -155,7 +156,14 @@ $access = DB::fetch_first(
     array($fid, $uid)
 );
 
-if(!$group || intval($group['allowpost']) <= 0 || ($access && intval($access['allowpost']) <= 0)){
+$postperm = trim(str_replace(',', ' ', (string)($forum['postperm'] ?? '')));
+$forumAllowsGroup = $postperm === '' || in_array(
+    (string)intval($member['groupid']),
+    preg_split('/\\s+/', $postperm),
+    true
+);
+
+if(!$group || intval($group['allowpost']) <= 0 || !$forumAllowsGroup || ($access && intval($access['allowpost']) <= 0)){
     echo json_encode([
         'code'=>403,
         'message'=>'当前用户组无权在此板块发布主题'
