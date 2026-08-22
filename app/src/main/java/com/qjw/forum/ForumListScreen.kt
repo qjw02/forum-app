@@ -1,6 +1,7 @@
 package com.qjw.forum
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,12 +37,13 @@ fun ForumListScreen(
     var forums by remember { mutableStateOf(cachedForums.orEmpty()) }
     var loading by remember { mutableStateOf(cachedForums == null) }
     var message by remember { mutableStateOf("") }
+    var refreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        if (cachedForums != null) return@LaunchedEffect
-
+    fun loadForums() {
         scope.launch {
+            refreshing = true
+            message = ""
             try {
                 val result = ApiClient.api.getForums()
                 if (result.code == 0) {
@@ -52,8 +56,13 @@ fun ForumListScreen(
                 message = e.message ?: "网络错误"
             } finally {
                 loading = false
+                refreshing = false
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        if (cachedForums == null) loadForums()
     }
 
     Column(
@@ -61,10 +70,22 @@ fun ForumListScreen(
             .fillMaxSize()
             .padding(15.dp)
     ) {
-        Text(
-            text = "板块",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "板块",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Button(
+                enabled = !refreshing,
+                onClick = { loadForums() }
+            ) {
+                Text(if (refreshing) "刷新中…" else "刷新")
+            }
+        }
 
         Spacer(Modifier.height(15.dp))
 
