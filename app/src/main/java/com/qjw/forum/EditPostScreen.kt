@@ -45,8 +45,9 @@ fun EditPostScreen(
             val result = ApiClient.api.getThread(tid)
             if (result.code == 0 && result.data != null) {
                 subject = result.data.thread.subject
-                message = result.data.thread.rawContent
-                    ?: cleanDiscuzText(result.data.thread.content)
+                message = cleanEditableThreadText(
+                    result.data.thread.rawContent ?: result.data.thread.content
+                )
                 originalImages = result.data.thread.images
             } else {
                 resultText = result.message ?: "主题加载失败"
@@ -80,6 +81,14 @@ fun EditPostScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving
             )
+            if (originalImages.isNotEmpty()) {
+                Spacer(Modifier.height(14.dp))
+                Text("已有图片（保存修改后会保留）", style = MaterialTheme.typography.titleSmall)
+                originalImages.forEach { imageUrl ->
+                    Spacer(Modifier.height(8.dp))
+                    ImageViewer(url = imageUrl)
+                }
+            }
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = message,
@@ -89,14 +98,6 @@ fun EditPostScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving
             )
-            if (originalImages.isNotEmpty()) {
-                Spacer(Modifier.height(14.dp))
-                Text("已有图片（保存修改后会保留）", style = MaterialTheme.typography.titleSmall)
-                originalImages.forEach { imageUrl ->
-                    Spacer(Modifier.height(8.dp))
-                    ImageViewer(url = imageUrl)
-                }
-            }
             Spacer(Modifier.height(16.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
@@ -129,4 +130,14 @@ fun EditPostScreen(
             Text(resultText, color = MaterialTheme.colorScheme.error)
         }
     }
+}
+
+
+private fun cleanEditableThreadText(text: String): String {
+    return text
+        .replace(Regex("\\[i=s\\].*?\\[/i\\]\\s*", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("\\[attach\\].*?\\[/attach\\]", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("\\[/?(align|color|font|size|b|i|u|s)(=[^\\]]*)?\\]", RegexOption.IGNORE_CASE), "")
+        .replace("&quot;", "\"")
+        .trim()
 }
