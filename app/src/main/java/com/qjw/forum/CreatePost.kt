@@ -433,7 +433,7 @@ fun CreatePost(
 }
 
 
-private fun preparePostImage(context: android.content.Context, uri: Uri, number: Int): File {
+fun preparePostImage(context: android.content.Context, uri: Uri, number: Int): File {
     val type = context.contentResolver.getType(uri).orEmpty()
     val suffix = if (type.equals("image/gif", ignoreCase = true)) ".gif" else ".jpg"
     val file = File(context.cacheDir, "post_" + System.currentTimeMillis() + "_" + number + suffix)
