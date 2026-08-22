@@ -225,16 +225,11 @@ echo json_encode([
 'data'=>[
 
 'avatar'=>
-
-$_G['siteurl'].
-
-'uc_server/avatar.php?uid='.
-
-$uid.
-
-'&size=middle&t='.
-
-time()
+(
+    ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http') .
+    '://' . ($_SERVER['HTTP_HOST'] ?? '') .
+    '/uc_server/avatar.php?uid=' . $uid . '&size=middle&t=' . time()
+)
 
 ]
 
