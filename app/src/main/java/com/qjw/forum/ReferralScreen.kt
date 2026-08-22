@@ -43,11 +43,13 @@ fun ReferralScreen() {
     val referralLink = domain + "/member.php?mod=register&referid=" + uid
     var copied by remember { mutableStateOf(false) }
     var visitCount by remember { mutableStateOf<Int?>(null) }
+    var stats by remember { mutableStateOf<ReferralStatsData?>(null) }
 
     LaunchedEffect(uid) {
         try {
             val result = ApiClient.api.getReferralStats()
             if (result.code == 0) {
+                stats = result.data
                 visitCount = result.data?.visit_count ?: 0
             }
         } catch (_: Exception) {
@@ -94,11 +96,27 @@ fun ReferralScreen() {
                     Text("推广数据", fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(5.dp))
                     Text(
-                        text = if (visitCount == null) "正在读取访问记录..."
-                        else "已带来 " + visitCount + " 个推广 IP"
+                        text = if (visitCount == null) "正在读取推广数据..."
+                        else "推广 IP " + visitCount + " · 注册会员 " + (stats?.registered_count ?: 0)
                     )
                 }
                 Text("📈", style = MaterialTheme.typography.titleLarge)
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F0FF)),
+            shape = RoundedCornerShape(18.dp)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text("已记录奖励累计", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text("金钱 +" + (stats?.total_money ?: 0) + "    C币 +" + (stats?.total_coin ?: 0) + "    贡献 +" + (stats?.total_contribution ?: 0))
+                Spacer(Modifier.height(5.dp))
+                Text("仅统计 APP 推广注册已记录的奖励；实际积分以论坛后台为准。", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
 
@@ -168,6 +186,35 @@ fun ReferralScreen() {
             description = "如果您的朋友不但访问并且注册成为会员，您将再获得积分奖励",
             rewards = "金钱 +50    贡献 +1    C币 +10"
         )
+
+        Spacer(Modifier.height(20.dp))
+
+        Text(
+            text = "推广注册记录",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        if (stats?.rewards.isNullOrEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Text("暂时没有已记录的推广注册。", modifier = Modifier.padding(18.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            stats?.rewards?.forEach { item ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F7FF))
+                ) {
+                    Column(modifier = Modifier.padding(15.dp)) {
+                        Text(item.username ?: "新会员", fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Text("金钱 +" + (item.money ?: 0) + "    C币 +" + (item.coin ?: 0) + "    贡献 +" + (item.contribution ?: 0))
+                    }
+                }
+            }
+        }
 
         Spacer(Modifier.height(24.dp))
 
