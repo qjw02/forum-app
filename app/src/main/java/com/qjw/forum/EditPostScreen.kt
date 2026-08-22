@@ -52,8 +52,10 @@ fun EditPostScreen(
     var uploadProgress by remember(tid) { mutableStateOf("") }
     var deletingImage by remember(tid) { mutableStateOf<String?>(null) }
     var resultText by remember(tid) { mutableStateOf("") }
+    var hasUserEdited by remember(tid) { mutableStateOf(false) }
     val newImages = remember { mutableStateListOf<Uri>() }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val editDraftKey = remember(tid) { "edit_draft_$tid" }
 
     LaunchedEffect(newImages.size) {
         if (newImages.size > 9) {
@@ -72,6 +74,13 @@ fun EditPostScreen(
                     result.data.thread.rawContent ?: result.data.thread.content
                 )
                 originalImages = result.data.thread.images
+                PostDraftStore.load(context, editDraftKey)?.let { draft ->
+                    if (draft.subject.isNotBlank() || draft.message.isNotBlank()) {
+                        subject = draft.subject
+                        message = draft.message
+                        resultText = "已恢复上次未保存的编辑内容"
+                    }
+                }
             } else {
                 resultText = result.message ?: "主题加载失败"
             }
@@ -79,6 +88,23 @@ fun EditPostScreen(
             resultText = e.message ?: "主题加载失败"
         } finally {
             loading = false
+        }
+    }
+
+    LaunchedEffect(hasUserEdited, subject, message, forumId) {
+        if (hasUserEdited) {
+            PostDraftStore.save(
+                context,
+                editDraftKey,
+                PostDraft(
+                    forumId = forumId?.toIntOrNull(),
+                    subject = subject,
+                    message = message,
+                    sellContact = false,
+                    contact = "",
+                    price = "10"
+                )
+            )
         }
     }
 
@@ -99,7 +125,10 @@ fun EditPostScreen(
         } else {
             OutlinedTextField(
                 value = subject,
-                onValueChange = { subject = it },
+                onValueChange = {
+                    subject = it
+                    hasUserEdited = true
+                },
                 label = { Text("标题") },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving
@@ -121,13 +150,22 @@ fun EditPostScreen(
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = message,
-                onValueChange = { message = it },
+                onValueChange = {
+                    message = it
+                    hasUserEdited = true
+                },
                 label = { Text("内容") },
                 minLines = 8,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving
             )
             Spacer(Modifier.height(14.dp))
+            Text(
+                "文字修改会自动保存为本机草稿；图片需重新选择。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(10.dp))
             Text("追加图片", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
             ImagePicker(images = newImages, onChange = {})
@@ -195,6 +233,7 @@ fun EditPostScreen(
                                 ContentCache.clearThread(tid)
                                 forumId?.let { ContentCache.clearForum(it) }
                                 PostCache.clear()
+                                PostDraftStore.clear(context, editDraftKey)
                                 onSaved(tid)
                             } else {
                                 resultText = "保存失败，当前编辑内容已保留，可直接重试：${result.message ?: "服务器未说明原因"}"
