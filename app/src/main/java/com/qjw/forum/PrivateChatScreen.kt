@@ -48,7 +48,8 @@ fun PrivateChatScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     var loading by remember(plid) { mutableStateOf(true) }
-    var error by remember(plid) { mutableStateOf("") }
+    var loadError by remember(plid) { mutableStateOf("") }
+    var sendError by remember(plid) { mutableStateOf("") }
     var messages by remember(plid) { mutableStateOf<List<PrivateChatItem>>(emptyList()) }
     var input by remember(plid) { mutableStateOf("") }
     var sending by remember(plid) { mutableStateOf(false) }
@@ -58,12 +59,12 @@ fun PrivateChatScreen(
             val result = ApiClient.api.getPrivateMessageDetail(plid)
             if (result.code == 0) {
                 messages = result.data?.list.orEmpty()
-                error = ""
+                loadError = ""
             } else {
-                error = result.message ?: "加载聊天失败"
+                loadError = result.message ?: "加载聊天失败"
             }
         } catch (e: Exception) {
-            error = e.message ?: "网络错误"
+            loadError = e.message ?: "网络错误"
         } finally {
             loading = false
         }
@@ -136,7 +137,7 @@ fun PrivateChatScreen(
                 CircularProgressIndicator()
             }
 
-            error.isNotEmpty() && messages.isEmpty() -> Text(error)
+            loadError.isNotEmpty() && messages.isEmpty() -> Text(loadError)
 
             else -> Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -151,10 +152,19 @@ fun PrivateChatScreen(
             }
         }
 
-        if (error.isNotEmpty() && messages.isNotEmpty()) {
+        if (loadError.isNotEmpty() && messages.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             Text(
-                text = error,
+                text = loadError,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        if (sendError.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = sendError,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -183,16 +193,18 @@ fun PrivateChatScreen(
 
                 scope.launch {
                     try {
-                        val result = ApiClient.api.sendPrivateMessage(targetUid, message)
+                        val result = parsePrivateMessageResponse(
+                            ApiClient.api.sendPrivateMessage(targetUid, message)
+                        )
                         if (result.code != 0) {
-                            error = "发送失败，消息内容已保留，点击发送可重试：${result.message ?: "服务器未说明原因"}"
+                            sendError = "发送失败，消息内容已保留，点击发送可重试：${result.message ?: "服务器未说明原因"}"
                             input = message
                         } else {
-                            error = ""
+                            sendError = ""
                             loadMessages()
                         }
                     } catch (e: Exception) {
-                        error = "发送失败，消息内容已保留，点击发送可重试：${e.message ?: "网络异常"}"
+                        sendError = "发送失败，消息内容已保留，点击发送可重试：${e.message ?: "网络异常"}"
                         input = message
                     } finally {
                         sending = false
