@@ -1,6 +1,9 @@
 package com.qjw.forum
 
 import android.os.Bundle
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.activity.ComponentActivity
@@ -41,6 +44,13 @@ class MainActivity : ComponentActivity(){
         // 初始化用户存储
 
         UserStore.init(this)
+        UnreadStore.init(this)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+        }
 
         ContentCache.init(this)
 
