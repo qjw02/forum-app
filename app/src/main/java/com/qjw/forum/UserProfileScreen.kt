@@ -41,7 +41,8 @@ import java.util.Locale
 @Composable
 fun UserProfileScreen(
     uid: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenChat: (String) -> Unit
 ) {
     var profile by remember(uid) { mutableStateOf<PublicProfileData?>(null) }
     var loading by remember(uid) { mutableStateOf(true) }
@@ -238,9 +239,14 @@ fun UserProfileScreen(
                                                 message = privateMessage.trim()
                                             )
                                             if (result.code == 0) {
-                                                message = "私信已发送，可到消息中心查看"
                                                 privateMessage = ""
                                                 showPrivateMessage = false
+                                                val plid = result.data?.plid
+                                                if (plid.isNullOrBlank()) {
+                                                    message = "私信已发送，可到消息中心查看"
+                                                } else {
+                                                    onOpenChat(plid)
+                                                }
                                             } else {
                                                 message = result.message ?: "私信发送失败"
                                             }
