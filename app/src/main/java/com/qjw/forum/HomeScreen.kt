@@ -42,7 +42,7 @@ private fun HomeAdBanner(ad: HomeAd, onOpenThread: (String) -> Unit) {
     var imageRatio by remember(ad.image) { mutableStateOf(6f) }
 
     AsyncImage(
-        model = ad.image,
+        model = appThumbnailUrl(ad.image, 1080) ?: ad.image,
         contentDescription = "广告",
         contentScale = ContentScale.Fit,
         onSuccess = { state ->
