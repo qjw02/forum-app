@@ -263,6 +263,9 @@ data class ThreadInfo(
 
     val content:String,
 
+    @SerializedName("raw_content")
+    val rawContent:String? = null,
+
     val images:List<String>,
 
     val dateline:Long? = null,
