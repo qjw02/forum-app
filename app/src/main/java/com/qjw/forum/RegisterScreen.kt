@@ -32,6 +32,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var referid by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var submitting by remember { mutableStateOf(false) }
     var registered by remember { mutableStateOf(false) }
@@ -89,6 +90,17 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(Modifier.height(10.dp))
+
+        OutlinedTextField(
+            value = referid,
+            onValueChange = { referid = it.filter(Char::isDigit) },
+            label = { Text("推广 UID（可选）") },
+            supportingText = { Text("好友邀请链接中的 referid 数字") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(20.dp))
 
         Button(
@@ -114,7 +126,8 @@ fun RegisterScreen(
                                 val raw = ApiClient.api.register(
                                     username.trim(),
                                     password,
-                                    email.trim()
+                                    email.trim(),
+                                    referid.trim()
                                 ).string()
 
                                 val result = try {
