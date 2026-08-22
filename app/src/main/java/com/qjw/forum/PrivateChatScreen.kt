@@ -40,7 +40,8 @@ import java.util.Locale
 @Composable
 fun PrivateChatScreen(
     plid: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenUser: (String) -> Unit
 ) {
     val currentUid = UserStore.getUid().toString()
     val scope = rememberCoroutineScope()
@@ -100,11 +101,22 @@ fun PrivateChatScreen(
             Text("返回")
         }
 
-        Text(
-            text = "私信聊天",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "私信聊天",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            if (otherUid != null) {
+                Button(onClick = { onOpenUser(otherUid) }) {
+                    Text("查看资料")
+                }
+            }
+        }
         Text(
             text = "聊天页面打开时自动更新",
             style = MaterialTheme.typography.bodySmall,
