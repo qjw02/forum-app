@@ -190,6 +190,13 @@ fun ProfileScreen(
                             text = "用户组：" + (user.group_name ?: "普通会员"),
                             color = MaterialTheme.colorScheme.error
                         )
+                        if (user.isVip == true) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "⭐ 当前为 VIP 会员",
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
 
                         Spacer(Modifier.height(15.dp))
 
