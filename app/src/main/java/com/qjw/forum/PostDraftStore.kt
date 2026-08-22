@@ -8,7 +8,13 @@ data class PostDraft(
     val message: String,
     val sellContact: Boolean,
     val contact: String,
-    val price: String
+    val price: String,
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
+data class SavedPostDraft(
+    val key: String,
+    val draft: PostDraft
 )
 
 object PostDraftStore {
@@ -27,8 +33,20 @@ object PostDraftStore {
             message = pref.getString("${key}_message", "") ?: "",
             sellContact = pref.getBoolean("${key}_sell_contact", false),
             contact = pref.getString("${key}_contact", "") ?: "",
-            price = pref.getString("${key}_price", "10") ?: "10"
+            price = pref.getString("${key}_price", "10") ?: "10",
+            updatedAt = pref.getLong("${key}_updated_at", 0L)
         )
+    }
+
+    fun list(context: Context): List<SavedPostDraft> {
+        val keys = prefs(context).all.keys
+            .filter { it.startsWith("post_draft_") && it.endsWith("_subject") }
+            .map { it.removeSuffix("_subject") }
+            .distinct()
+
+        return keys.mapNotNull { key ->
+            load(context, key)?.let { SavedPostDraft(key, it) }
+        }.sortedByDescending { it.draft.updatedAt }
     }
 
     fun save(context: Context, key: String, draft: PostDraft) {
@@ -39,6 +57,7 @@ object PostDraftStore {
             .putBoolean("${key}_sell_contact", draft.sellContact)
             .putString("${key}_contact", draft.contact)
             .putString("${key}_price", draft.price)
+            .putLong("${key}_updated_at", System.currentTimeMillis())
             .apply()
     }
 
@@ -50,6 +69,7 @@ object PostDraftStore {
             .remove("${key}_sell_contact")
             .remove("${key}_contact")
             .remove("${key}_price")
+            .remove("${key}_updated_at")
             .apply()
     }
 }
