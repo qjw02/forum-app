@@ -48,17 +48,17 @@ function register_referral_log($referrerUid, $newUid) {
         return false;
     }
 
-    DB::query("CREATE TABLE IF NOT EXISTS \`pre_app_referral_log\` (
-        \`id\` int(10) unsigned NOT NULL AUTO_INCREMENT,
-        \`referrer_uid\` int(10) unsigned NOT NULL,
-        \`referred_uid\` int(10) unsigned NOT NULL,
-        \`money_reward\` int(10) NOT NULL DEFAULT '50',
-        \`coin_reward\` int(10) NOT NULL DEFAULT '10',
-        \`contribution_reward\` int(10) NOT NULL DEFAULT '1',
-        \`dateline\` int(10) unsigned NOT NULL DEFAULT '0',
-        PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`referred_uid\` (\`referred_uid\`),
-        KEY \`referrer_uid\` (\`referrer_uid\`)
+    DB::query("CREATE TABLE IF NOT EXISTS `pre_app_referral_log` (
+        `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `referrer_uid` int(10) unsigned NOT NULL,
+        `referred_uid` int(10) unsigned NOT NULL,
+        `money_reward` int(10) NOT NULL DEFAULT '50',
+        `coin_reward` int(10) NOT NULL DEFAULT '10',
+        `contribution_reward` int(10) NOT NULL DEFAULT '1',
+        `dateline` int(10) unsigned NOT NULL DEFAULT '0',
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `referred_uid` (`referred_uid`),
+        KEY `referrer_uid` (`referrer_uid`)
     ) ENGINE=MyISAM DEFAULT CHARSET=utf8");
 
     DB::query(
