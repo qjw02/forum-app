@@ -5,7 +5,7 @@ import com.google.gson.Gson
 
 object ProfileCache {
     private const val PREF_NAME = "qjw_profile_cache"
-    private const val TTL_MILLIS = 5 * 60 * 1000L
+    private const val TTL_MILLIS = 15 * 60 * 1000L
 
     private var context: Context? = null
     private val gson = Gson()
