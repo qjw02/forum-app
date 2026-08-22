@@ -34,6 +34,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ReferralScreen() {
@@ -44,16 +47,24 @@ fun ReferralScreen() {
     var copied by remember { mutableStateOf(false) }
     var visitCount by remember { mutableStateOf<Int?>(null) }
     var stats by remember { mutableStateOf<ReferralStatsData?>(null) }
+    var loadingStats by remember { mutableStateOf(true) }
+    var statsError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uid) {
+        loadingStats = true
+        statsError = null
         try {
             val result = ApiClient.api.getReferralStats()
             if (result.code == 0) {
                 stats = result.data
                 visitCount = result.data?.visit_count ?: 0
+            } else {
+                statsError = result.message ?: "推广数据暂时无法读取"
             }
         } catch (_: Exception) {
-            // 统计接口不可用时保留推广链接和说明，不影响页面使用。
+            statsError = "推广数据暂时无法读取，请稍后重试"
+        } finally {
+            loadingStats = false
         }
     }
 
@@ -96,8 +107,11 @@ fun ReferralScreen() {
                     Text("推广数据", fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(5.dp))
                     Text(
-                        text = if (visitCount == null) "正在读取推广数据..."
-                        else "推广 IP " + visitCount + " · 注册会员 " + (stats?.registered_count ?: 0)
+                        text = when {
+                            loadingStats -> "正在读取推广数据..."
+                            statsError != null -> statsError!!
+                            else -> "推广 IP " + (visitCount ?: 0) + " · 注册会员 " + (stats?.registered_count ?: 0)
+                        }
                     )
                 }
                 Text("📈", style = MaterialTheme.typography.titleLarge)
@@ -197,7 +211,15 @@ fun ReferralScreen() {
 
         Spacer(Modifier.height(10.dp))
 
-        if (stats?.rewards.isNullOrEmpty()) {
+        if (loadingStats) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Text("正在读取注册记录...", modifier = Modifier.padding(18.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else if (statsError != null) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Text(statsError!!, modifier = Modifier.padding(18.dp), color = Color(0xFFB3261E))
+            }
+        } else if (stats?.rewards.isNullOrEmpty()) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Text("暂时没有已记录的推广注册。", modifier = Modifier.padding(18.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -211,6 +233,14 @@ fun ReferralScreen() {
                         Text(item.username ?: "新会员", fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
                         Text("金钱 +" + (item.money ?: 0) + "    C币 +" + (item.coin ?: 0) + "    贡献 +" + (item.contribution ?: 0))
+                        item.dateline?.takeIf { it > 0 }?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "奖励时间：" + SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(it * 1000)),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
