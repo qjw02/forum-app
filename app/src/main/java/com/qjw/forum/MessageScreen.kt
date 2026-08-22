@@ -89,6 +89,19 @@ fun MessageScreen(
         }
     }
 
+    fun openConversation(conversation: PrivateConversation) {
+        val unread = conversation.unread ?: 0
+        if (unread > 0) {
+            conversations = conversations.map {
+                if (it.plid == conversation.plid) it.copy(unread = 0) else it
+            }
+            UnreadStore.updatePrivateMessages(
+                (UnreadStore.privateMessageCount - unread).coerceAtLeast(0)
+            )
+        }
+        onOpenChat(conversation.plid)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,7 +158,7 @@ fun MessageScreen(
             }
 
             else -> conversations.forEach { conversation ->
-                ConversationCard(conversation, onOpenChat)
+                ConversationCard(conversation) { openConversation(conversation) }
                 Spacer(Modifier.height(10.dp))
             }
         }
@@ -179,12 +192,12 @@ private fun MessageTab(
 @Composable
 private fun ConversationCard(
     conversation: PrivateConversation,
-    onOpenChat: (String) -> Unit
+    onOpenChat: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpenChat(conversation.plid) }
+            .clickable { onOpenChat() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
