@@ -199,6 +199,8 @@ fun MyContentScreen(
                                     val result = ApiClient.api.deletePost(thread.tid)
                                     if (result.code == 0) {
                                         threads = threads.filterNot { it.tid == thread.tid }
+                                        thread.fid?.let { ContentCache.clearForum(it.toString()) }
+                                        PostCache.clear()
                                         deleteTarget = null
                                     } else {
                                         error = result.message ?: "删除失败"
