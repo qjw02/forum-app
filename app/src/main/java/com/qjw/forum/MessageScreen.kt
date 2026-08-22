@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 @Composable
@@ -220,34 +225,53 @@ private fun ConversationCard(
             .fillMaxWidth()
             .clickable { onOpenChat() }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = conversation.avatar,
+                contentDescription = null,
+                modifier = Modifier.size(46.dp)
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp)
             ) {
-                Text(
-                    text = conversation.subject?.ifBlank { "私信" } ?: "私信",
-                    fontWeight = FontWeight.Bold
-                )
-                if ((conversation.unread ?: 0) > 0) {
-                    Badge()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = conversation.otherName?.ifBlank {
+                            conversation.subject?.ifBlank { "私信" } ?: "私信"
+                        } ?: conversation.subject?.ifBlank { "私信" } ?: "私信",
+                        fontWeight = FontWeight.Bold
+                    )
+                    if ((conversation.unread ?: 0) > 0) {
+                        Badge()
+                    }
                 }
-            }
-            if (!conversation.message.isNullOrBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = conversation.message,
-                    maxLines = 2,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if ((conversation.unread ?: 0) > 0) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "有未读消息",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                if (!conversation.message.isNullOrBlank()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = conversation.message,
+                        maxLines = 2,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                conversation.dateline?.takeIf { it > 0 }?.let { seconds ->
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        text = SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
+                            .format(Date(seconds * 1000)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
