@@ -122,6 +122,13 @@ fun CreatePost(
         }
     }
 
+    LaunchedEffect(images.size) {
+        if (images.size > 9) {
+            while (images.size > 9) images.removeAt(images.lastIndex)
+            resultText = "一次最多选择 9 张图片，超出部分已移除"
+        }
+    }
+
     LaunchedEffect(
         draftRestored,
         selectedForum?.fid,
