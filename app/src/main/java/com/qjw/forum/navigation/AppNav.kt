@@ -580,7 +580,8 @@ fun AppNav(){
                     CreatePost(
                         fid = null,
                         draftKeyOverride = key,
-                        onOpenThread = { tid -> page = "thread/$tid" }
+                        onOpenThread = { tid -> page = "thread/$tid" },
+                        onOpenVip = { page = "vip" }
                     )
                 }
 
