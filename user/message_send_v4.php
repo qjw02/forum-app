@@ -136,29 +136,6 @@ DB::query(
     array(TIMESTAMP, TIMESTAMP, $plid, $toUid)
 );
 
-/*
- * 推送是附加能力：服务账号、网络或 Firebase 出现问题时，绝不能影响
- * 已成功写入论坛数据库的私信。
- */
-$pushSent = false;
-$pushHelper = __DIR__.'/firebase_push.php';
-if (is_readable($pushHelper)) {
-    try {
-        require_once $pushHelper;
-        if (function_exists('fcm_send_to_user')) {
-            $title = $from['username'].' 发来私信';
-            $body = mb_substr($message, 0, 100, 'UTF-8');
-            fcm_send_to_user($toUid, $title, $body, array(
-                'type' => 'private_message',
-                'plid' => $plid,
-                'uid' => $fromUid
-            ));
-            $pushSent = true;
-        }
-    } catch (Throwable $ignored) {
-        // 私信本身已成功，不向客户端暴露推送服务内部错误。
-    }
-}
 
 $pmid = $plid;
 
