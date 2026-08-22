@@ -385,24 +385,34 @@ fun CreatePost(
                                     resultText = uploadProgress
                                 }
                                 val part = MultipartBody.Part.createFormData("file", file.name, body)
-                                val upload = try {
-                                    ApiClient.api.uploadImage(part)
-                                } catch (error: Exception) {
-                                    throw IllegalStateException(
-                                        "第 $number 张图片上传失败，内容和已选图片已保留，可直接重试：${error.message ?: "网络异常"}"
-                                    )
+                                var attachment: String? = null
+                                var uploadError = "网络异常"
+                                for (attempt in 1..2) {
+                                    try {
+                                        if (attempt > 1) {
+                                            uploadProgress = "图片 $number/${images.size}：正在自动重试..."
+                                            resultText = uploadProgress
+                                        }
+                                        val upload = ApiClient.api.uploadImage(part)
+                                        val value = upload.data?.attachment
+                                        if (upload.code == 0 && !value.isNullOrBlank()) {
+                                            attachment = value
+                                            break
+                                        }
+                                        uploadError = upload.message ?: "服务器未返回图片地址"
+                                    } catch (error: Exception) {
+                                        uploadError = error.message ?: "网络异常"
+                                    }
                                 }
 
-                                if (upload.code != 0 || upload.data?.attachment.isNullOrBlank()) {
-                                    throw IllegalStateException(
-                                        "第 $number 张图片上传失败，内容和已选图片已保留，可直接重试：${upload.message ?: "服务器未返回图片地址"}"
-                                    )
-                                }
+                                val uploadedAttachment = attachment ?: throw IllegalStateException(
+                                    "第 $number 张图片上传失败（已自动重试 1 次），内容和已选图片已保留，可直接重试：$uploadError"
+                                )
 
                                 finalMessage += "\n\n[img]" +
                                     DomainManager.getDomain().trimEnd('/') +
                                     "/data/attachment/forum/" +
-                                    upload.data?.attachment +
+                                    uploadedAttachment +
                                     "[/img]"
                                 uploadProgress = "图片 $number/${images.size}：上传完成（${number * 100 / images.size}%）"
                                 resultText = uploadProgress
