@@ -43,34 +43,43 @@ fun MessageScreen(
     var notifications by remember { mutableStateOf<List<NotificationItem>>(emptyList()) }
     var conversations by remember { mutableStateOf<List<PrivateConversation>>(emptyList()) }
 
-    LaunchedEffect(selectedTab) {
-        if (!UserStore.isLogin()) return@LaunchedEffect
-        loading = true
-        error = ""
-
-        try {
-            if (selectedTab == 0) {
-                val result = ApiClient.api.getNotifications()
-                if (result.code == 0) {
-                    notifications = result.data?.list.orEmpty()
-                    UnreadStore.updateNotifications(result.data?.unread ?: 0)
-                } else {
-                    error = result.message ?: "加载消息失败"
-                }
-            } else {
-                val result = ApiClient.api.getPrivateMessages()
-                if (result.code == 0) {
-                    conversations = result.data?.list.orEmpty()
-                    UnreadStore.updatePrivateMessages(result.data?.unread ?: 0)
-                } else {
-                    error = result.message ?: "加载私信失败"
-                }
-            }
-        } catch (e: Exception) {
-            error = e.message ?: "网络错误"
-        } finally {
+    fun loadCurrentTab() {
+        if (!UserStore.isLogin()) {
             loading = false
+            return
         }
+        scope.launch {
+            loading = true
+            error = ""
+
+            try {
+                if (selectedTab == 0) {
+                    val result = ApiClient.api.getNotifications()
+                    if (result.code == 0) {
+                        notifications = result.data?.list.orEmpty()
+                        UnreadStore.updateNotifications(result.data?.unread ?: 0)
+                    } else {
+                        error = result.message ?: "加载消息失败"
+                    }
+                } else {
+                    val result = ApiClient.api.getPrivateMessages()
+                    if (result.code == 0) {
+                        conversations = result.data?.list.orEmpty()
+                        UnreadStore.updatePrivateMessages(result.data?.unread ?: 0)
+                    } else {
+                        error = result.message ?: "加载私信失败"
+                    }
+                }
+            } catch (e: Exception) {
+                error = e.message ?: "网络错误"
+            } finally {
+                loading = false
+            }
+        }
+    }
+
+    LaunchedEffect(selectedTab) {
+        loadCurrentTab()
     }
 
     fun markRead(notification: NotificationItem) {
@@ -109,11 +118,23 @@ fun MessageScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text(
-            text = "消息",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "消息",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            androidx.compose.material3.OutlinedButton(
+                enabled = !loading && UserStore.isLogin(),
+                onClick = { loadCurrentTab() }
+            ) {
+                Text(if (loading) "更新中…" else "刷新")
+            }
+        }
 
         Spacer(Modifier.height(16.dp))
 
