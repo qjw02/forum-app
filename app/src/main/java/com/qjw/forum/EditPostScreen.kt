@@ -159,14 +159,31 @@ fun EditPostScreen(
                                         uploadProgress = "正在上传新图片 $number/${newImages.size}（$overall%）"
                                     }
                                     val part = MultipartBody.Part.createFormData("file", file.name, body)
-                                    val upload = ApiClient.api.uploadImage(part)
-                                    if (upload.code != 0 || upload.data?.attachment.isNullOrBlank()) {
-                                        throw IllegalStateException(upload.message ?: "图片上传失败")
+                                    var attachment: String? = null
+                                    var uploadError = "网络异常"
+                                    for (attempt in 1..2) {
+                                        try {
+                                            if (attempt > 1) {
+                                                uploadProgress = "新图片 $number/${newImages.size}：正在自动重试..."
+                                            }
+                                            val upload = ApiClient.api.uploadImage(part)
+                                            val value = upload.data?.attachment
+                                            if (upload.code == 0 && !value.isNullOrBlank()) {
+                                                attachment = value
+                                                break
+                                            }
+                                            uploadError = upload.message ?: "服务器未返回图片地址"
+                                        } catch (error: Exception) {
+                                            uploadError = error.message ?: "网络异常"
+                                        }
                                     }
+                                    val uploadedAttachment = attachment ?: throw IllegalStateException(
+                                        "第 $number 张新图片上传失败（已自动重试 1 次），本次修改没有保存：$uploadError"
+                                    )
                                     finalMessage += "\n\n[img]" +
                                         DomainManager.getDomain().trimEnd('/') +
                                         "/data/attachment/forum/" +
-                                        upload.data?.attachment +
+                                        uploadedAttachment +
                                         "[/img]"
                                 } finally {
                                     file.delete()
