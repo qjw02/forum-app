@@ -41,6 +41,9 @@ if (!$member) {
 
 $avatar = $_G['siteurl'] . 'uc_server/avatar.php?uid=' . $uid . '&size=middle';
 
+// 自定义 VIP 用户组：永久=22，半年=23，临时=24。
+$isVip = in_array(intval($member['groupid']), array(22, 23, 24), true);
+
 echo json_encode(array(
     'code' => 0,
     'data' => array(
@@ -49,6 +52,7 @@ echo json_encode(array(
         'avatar' => $avatar,
         'groupid' => intval($member['groupid']),
         'group_name' => $member['group_name'] ?: '普通会员',
+        'is_vip' => $isVip,
         'credits' => intval($member['credits']),
         'money' => intval($member['money']),
         'threads' => intval($member['threads']),
