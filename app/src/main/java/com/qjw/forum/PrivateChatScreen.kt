@@ -61,10 +61,10 @@ fun PrivateChatScreen(
                 messages = result.data?.list.orEmpty()
                 loadError = ""
             } else {
-                loadError = result.message ?: "加载聊天失败"
+                loadError = friendlyPrivateMessageError(result.message)
             }
         } catch (e: Exception) {
-            loadError = e.message ?: "网络错误"
+            loadError = friendlyPrivateMessageError(e.message)
         } finally {
             loading = false
         }
@@ -197,14 +197,16 @@ fun PrivateChatScreen(
                             ApiClient.api.sendPrivateMessage(targetUid, message)
                         )
                         if (result.code != 0) {
-                            sendError = "发送失败，消息内容已保留，点击发送可重试：${result.message ?: "服务器未说明原因"}"
+                            sendError = "发送失败，消息内容已保留，点击发送可重试：" +
+                                friendlyPrivateMessageError(result.message)
                             input = message
                         } else {
                             sendError = ""
                             loadMessages()
                         }
                     } catch (e: Exception) {
-                        sendError = "发送失败，消息内容已保留，点击发送可重试：${e.message ?: "网络异常"}"
+                        sendError = "发送失败，消息内容已保留，点击发送可重试：" +
+                            friendlyPrivateMessageError(e.message)
                         input = message
                     } finally {
                         sending = false
@@ -260,5 +262,22 @@ private fun ChatBubble(
                 )
             }
         }
+    }
+}
+
+
+private fun friendlyPrivateMessageError(raw: String?): String {
+    val text = raw.orEmpty().trim()
+    if (text.isBlank()) return "网络异常，请稍后重试"
+    val lower = text.lowercase(Locale.getDefault())
+
+    return when {
+        "access denied" in lower || "401" in lower -> "登录状态已失效，请重新登录后再试"
+        "database error" in lower || "<!doctype" in lower || "<html" in lower ->
+            "服务器暂时繁忙，请稍后重试"
+        "malformedjson" in lower || "malformed json" in lower ->
+            "服务器返回异常，请稍后重试"
+        text.length > 80 -> "服务器返回异常，请稍后重试"
+        else -> text
     }
 }
