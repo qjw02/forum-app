@@ -274,6 +274,13 @@ interface ApiService {
         @Field("tid") tid: String
     ): BaseResponse
 
+    @FormUrlEncoded
+    @POST("api/forum/delete_image.php")
+    suspend fun deleteThreadImage(
+        @Field("tid") tid: String,
+        @Field("image") image: String
+    ): BaseResponse
+
 
     @GET("api/user/notice.php")
     suspend fun getNotifications(
