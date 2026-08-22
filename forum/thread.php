@@ -836,7 +836,8 @@ echo json_encode([
 
     'content'=>$content,
 
-
+    // 原始 BBCode 仅用于 APP 编辑主题时回填，避免保存后丢失图片和格式。
+    'raw_content'=>$raw_content,
 
     'images'=>array_merge(
 
