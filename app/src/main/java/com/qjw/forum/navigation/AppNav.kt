@@ -372,7 +372,13 @@ fun AppNav(){
                 page=="drafts" -> {
                     DraftListScreen(
                         onBack = { page = "profile" },
-                        onEditDraft = { key -> page = "createDraft/$key" }
+                        onEditDraft = { key ->
+                            page = if (key.startsWith("edit_draft_")) {
+                                "editThread/" + key.removePrefix("edit_draft_")
+                            } else {
+                                "createDraft/$key"
+                            }
+                        }
                     )
                 }
 
