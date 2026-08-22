@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +49,7 @@ fun EditPostScreen(
     var message by remember(tid) { mutableStateOf("") }
     var originalImages by remember(tid) { mutableStateOf<List<String>>(emptyList()) }
     var uploadProgress by remember(tid) { mutableStateOf("") }
+    var deletingImage by remember(tid) { mutableStateOf<String?>(null) }
     var resultText by remember(tid) { mutableStateOf("") }
     val newImages = remember { mutableStateListOf<Uri>() }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -98,6 +101,12 @@ fun EditPostScreen(
                 originalImages.forEach { imageUrl ->
                     Spacer(Modifier.height(8.dp))
                     ImageViewer(url = imageUrl)
+                    OutlinedButton(
+                        enabled = !saving,
+                        onClick = { deletingImage = imageUrl }
+                    ) {
+                        Text("删除此图")
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -167,6 +176,46 @@ fun EditPostScreen(
             ) { Text(if (saving) "保存中…" else "保存修改") }
         }
 
+        deletingImage?.let { imageUrl ->
+            AlertDialog(
+                onDismissRequest = { if (!saving) deletingImage = null },
+                title = { Text("删除图片？") },
+                text = { Text("删除后无法恢复。") },
+                confirmButton = {
+                    Button(
+                        enabled = !saving,
+                        onClick = {
+                            scope.launch {
+                                saving = true
+                                resultText = ""
+                                try {
+                                    val result = ApiClient.api.deleteThreadImage(tid, imageUrl)
+                                    if (result.code == 0) {
+                                        originalImages = originalImages.filterNot { it == imageUrl }
+                                        message = removeImageCode(message, imageUrl)
+                                        deletingImage = null
+                                        ContentCache.clearThread(tid)
+                                    } else {
+                                        resultText = result.message ?: "图片删除失败"
+                                    }
+                                } catch (e: Exception) {
+                                    resultText = e.message ?: "图片删除失败"
+                                } finally {
+                                    saving = false
+                                }
+                            }
+                        }
+                    ) { Text("确认删除") }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        enabled = !saving,
+                        onClick = { deletingImage = null }
+                    ) { Text("取消") }
+                }
+            )
+        }
+
         if (uploadProgress.isNotBlank()) {
             Spacer(Modifier.height(8.dp))
             Text(uploadProgress, color = MaterialTheme.colorScheme.primary)
@@ -186,5 +235,14 @@ private fun cleanEditableThreadText(text: String): String {
         .replace(Regex("\\[attach\\].*?\\[/attach\\]", RegexOption.IGNORE_CASE), "")
         .replace(Regex("\\[/?(align|color|font|size|b|i|u|s)(=[^\\]]*)?\\]", RegexOption.IGNORE_CASE), "")
         .replace("&quot;", "\"")
+        .trim()
+}
+
+
+private fun removeImageCode(text: String, imageUrl: String): String {
+    val path = runCatching { java.net.URI(imageUrl).path }.getOrDefault(imageUrl)
+    return text
+        .replace("[img]$imageUrl[/img]", "")
+        .replace("[img]$path[/img]", "")
         .trim()
 }
