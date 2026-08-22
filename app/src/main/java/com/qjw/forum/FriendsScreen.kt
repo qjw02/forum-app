@@ -1,6 +1,7 @@
 package com.qjw.forum
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +40,7 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 
 @Composable
-fun FriendsScreen(onBack: () -> Unit) {
+fun FriendsScreen(onBack: () -> Unit, onOpenUser: (String) -> Unit) {
     val scope = rememberCoroutineScope()
     var loading by remember { mutableStateOf(true) }
     var message by remember { mutableStateOf("") }
@@ -134,7 +135,7 @@ fun FriendsScreen(onBack: () -> Unit) {
             Text("暂无好友申请")
         } else {
             requests.forEach { friend ->
-                FriendRequestCard(friend) { action("accept", friend.fuid) }
+                FriendRequestCard(friend, onOpenUser = { onOpenUser(friend.fuid) }) { action("accept", friend.fuid) }
                 Spacer(Modifier.height(8.dp))
             }
         }
@@ -149,7 +150,7 @@ fun FriendsScreen(onBack: () -> Unit) {
         }
 
         friends.forEach { friend ->
-            FriendCard(friend) { action("delete", friend.fuid) }
+            FriendCard(friend, onOpenUser = { onOpenUser(friend.fuid) }) { action("delete", friend.fuid) }
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -194,7 +195,7 @@ private fun FriendIdentity(friend: FriendItem, compact: Boolean = false) {
 }
 
 @Composable
-private fun FriendRequestCard(friend: FriendItem, onAccept: () -> Unit) {
+private fun FriendRequestCard(friend: FriendItem, onOpenUser: () -> Unit, onAccept: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -203,14 +204,16 @@ private fun FriendRequestCard(friend: FriendItem, onAccept: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FriendIdentity(friend, compact = true)
+            Box(modifier = Modifier.clickable(onClick = onOpenUser)) {
+                FriendIdentity(friend, compact = true)
+            }
             Button(onClick = onAccept) { Text("同意") }
         }
     }
 }
 
 @Composable
-private fun FriendCard(friend: FriendItem, onDelete: () -> Unit) {
+private fun FriendCard(friend: FriendItem, onOpenUser: () -> Unit, onDelete: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -219,7 +222,9 @@ private fun FriendCard(friend: FriendItem, onDelete: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FriendIdentity(friend, compact = true)
+            Box(modifier = Modifier.clickable(onClick = onOpenUser)) {
+                FriendIdentity(friend, compact = true)
+            }
             OutlinedButton(onClick = onDelete) { Text("删除") }
         }
     }
