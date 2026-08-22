@@ -44,9 +44,10 @@ fun MyContentScreen(
     var replies by remember(showReplies) { mutableStateOf<List<MyReplyItem>>(emptyList()) }
     var deleteTarget by remember { mutableStateOf<MyThreadItem?>(null) }
     var deleting by remember { mutableStateOf(false) }
+    var reloadKey by remember(showReplies) { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(showReplies) {
+    LaunchedEffect(showReplies, reloadKey) {
         loading = true
         error = ""
 
@@ -89,11 +90,23 @@ fun MyContentScreen(
 
         Spacer(Modifier.height(14.dp))
 
-        Text(
-            text = if (showReplies) "我的回复" else "我的主题",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        androidx.compose.foundation.layout.Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (showReplies) "我的回复" else "我的主题",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            OutlinedButton(
+                enabled = !loading,
+                onClick = { reloadKey++ }
+            ) {
+                Text(if (loading) "刷新中…" else "刷新")
+            }
+        }
 
         Spacer(Modifier.height(16.dp))
 
