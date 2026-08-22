@@ -92,6 +92,9 @@ data class ProfileData(
 
     val group_name:String? = null,
 
+    @SerializedName("is_vip")
+    val isVip:Boolean? = false,
+
     val credits:Int?,
 
     val money:Int?,
