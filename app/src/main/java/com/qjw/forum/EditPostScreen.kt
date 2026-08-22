@@ -43,7 +43,8 @@ fun EditPostScreen(
             val result = ApiClient.api.getThread(tid)
             if (result.code == 0 && result.data != null) {
                 subject = result.data.thread.subject
-                message = cleanDiscuzText(result.data.thread.content)
+                message = result.data.thread.rawContent
+                    ?: cleanDiscuzText(result.data.thread.content)
             } else {
                 resultText = result.message ?: "主题加载失败"
             }
