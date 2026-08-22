@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,12 +34,16 @@ import androidx.compose.ui.unit.dp
 fun MyContentScreen(
     showReplies: Boolean,
     onBack: () -> Unit,
-    onOpenThread: (String, String?) -> Unit
+    onOpenThread: (String, String?) -> Unit,
+    onEditThread: (String) -> Unit
 ) {
     var loading by remember(showReplies) { mutableStateOf(true) }
     var error by remember(showReplies) { mutableStateOf("") }
     var threads by remember(showReplies) { mutableStateOf<List<MyThreadItem>>(emptyList()) }
     var replies by remember(showReplies) { mutableStateOf<List<MyReplyItem>>(emptyList()) }
+    var deleteTarget by remember { mutableStateOf<MyThreadItem?>(null) }
+    var deleting by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(showReplies) {
         loading = true
@@ -109,9 +116,46 @@ fun MyContentScreen(
             }
 
             else -> threads.forEach { thread ->
-                MyThreadCard(thread, onOpenThread)
+                MyThreadCard(thread, onOpenThread, onEdit = { onEditThread(thread.tid) }, onDelete = { deleteTarget = thread })
                 Spacer(Modifier.height(10.dp))
             }
+        }
+
+        deleteTarget?.let { thread ->
+            AlertDialog(
+                onDismissRequest = { if (!deleting) deleteTarget = null },
+                title = { Text("删除主题？") },
+                text = { Text("“${thread.subject}”删除后不能恢复。") },
+                confirmButton = {
+                    Button(
+                        enabled = !deleting,
+                        onClick = {
+                            scope.launch {
+                                deleting = true
+                                try {
+                                    val result = ApiClient.api.deletePost(thread.tid)
+                                    if (result.code == 0) {
+                                        threads = threads.filterNot { it.tid == thread.tid }
+                                        deleteTarget = null
+                                    } else {
+                                        error = result.message ?: "删除失败"
+                                    }
+                                } catch (e: Exception) {
+                                    error = e.message ?: "删除失败"
+                                } finally {
+                                    deleting = false
+                                }
+                            }
+                        }
+                    ) { Text(if (deleting) "删除中…" else "确认删除") }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        enabled = !deleting,
+                        onClick = { deleteTarget = null }
+                    ) { Text("取消") }
+                }
+            )
         }
     }
 }
@@ -119,7 +163,9 @@ fun MyContentScreen(
 @Composable
 private fun MyThreadCard(
     thread: MyThreadItem,
-    onOpenThread: (String, String?) -> Unit
+    onOpenThread: (String, String?) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -134,6 +180,12 @@ private fun MyThreadCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(Modifier.height(10.dp))
+            androidx.compose.foundation.layout.Row {
+                OutlinedButton(onClick = onEdit) { Text("编辑") }
+                Spacer(Modifier.height(1.dp).weight(1f))
+                OutlinedButton(onClick = onDelete) { Text("删除") }
+            }
         }
     }
 }
