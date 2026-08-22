@@ -166,6 +166,17 @@ fun EditPostScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(10.dp))
+            OutlinedButton(
+                enabled = !saving,
+                onClick = {
+                    PostDraftStore.clear(context, editDraftKey)
+                    hasUserEdited = false
+                    resultText = "本机编辑草稿已清除（当前页面内容不会改变）"
+                }
+            ) {
+                Text("清除本机编辑草稿")
+            }
+            Spacer(Modifier.height(10.dp))
             Text("追加图片", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
             ImagePicker(images = newImages, onChange = {})
