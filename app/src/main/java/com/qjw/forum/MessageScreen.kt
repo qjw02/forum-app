@@ -238,7 +238,7 @@ private fun ConversationCard(
             )
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .padding(start = 12.dp)
             ) {
                 Row(
