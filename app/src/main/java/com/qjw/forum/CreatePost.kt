@@ -44,7 +44,8 @@ import java.io.FileOutputStream
 fun CreatePost(
     fid: String? = null,
     draftKeyOverride: String? = null,
-    onOpenThread: (String) -> Unit
+    onOpenThread: (String) -> Unit,
+    onOpenVip: () -> Unit = {}
 ) {
     var forums by remember { mutableStateOf<List<ForumItem>>(emptyList()) }
     var selectedForum by remember { mutableStateOf<ForumItem?>(null) }
@@ -209,6 +210,15 @@ fun CreatePost(
                     MaterialTheme.colorScheme.error
                 }
             )
+            if (!checkingPostPermission && !canPublish) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onOpenVip
+                ) {
+                    Text("开通 VIP 或升级用户组")
+                }
+            }
         }
 
         Spacer(Modifier.height(12.dp))
