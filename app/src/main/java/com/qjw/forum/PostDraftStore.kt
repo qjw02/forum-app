@@ -40,7 +40,10 @@ object PostDraftStore {
 
     fun list(context: Context): List<SavedPostDraft> {
         val keys = prefs(context).all.keys
-            .filter { it.startsWith("post_draft_") && it.endsWith("_subject") }
+            .filter {
+                (it.startsWith("post_draft_") || it.startsWith("edit_draft_")) &&
+                    it.endsWith("_subject")
+            }
             .map { it.removeSuffix("_subject") }
             .distinct()
 
