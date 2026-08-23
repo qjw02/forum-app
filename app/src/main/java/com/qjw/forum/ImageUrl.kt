@@ -25,5 +25,6 @@ fun appThumbnailUrl(source: String?, width: Int): String? {
     if (!attachmentPath.startsWith("data/attachment/")) return source
 
     val safeWidth = width.coerceIn(120, 1280)
-    return domain + "/api/user/thumb.php?path=" + Uri.encode(attachmentPath) + "&w=" + safeWidth
+    return domain + "/api/user/thumb.php?path=" + Uri.encode(attachmentPath) +
+        "&w=" + safeWidth + "&v=2"
 }
