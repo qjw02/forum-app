@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,7 +36,7 @@ import coil.compose.AsyncImage
 import com.qjw.forum.Banner
 import com.qjw.forum.appThumbnailUrl
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -46,16 +47,23 @@ fun BannerView(
     val items = banners.take(5)
     if (items.isEmpty()) return
 
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { items.size })
-    val scope = rememberCoroutineScope()
+    // 列表内容更新时，使用安全页数，避免旧页面下标在手势滑动期间越界。
+    val bannerKey = items.joinToString("|") { it.tid.orEmpty() + ":" + it.image.orEmpty() }
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { items.size.coerceAtLeast(1) })
 
-    LaunchedEffect(items.size) {
+    LaunchedEffect(bannerKey) {
+        if (pagerState.currentPage >= items.size) {
+            pagerState.scrollToPage(0)
+        }
+    }
+
+    LaunchedEffect(bannerKey, items.size) {
         if (items.size <= 1) return@LaunchedEffect
-        while (true) {
+        while (isActive) {
             delay(4000)
-            scope.launch {
-                pagerState.animateScrollToPage((pagerState.currentPage + 1) % items.size)
-            }
+            if (!isActive || items.size <= 1) break
+            val nextPage = (pagerState.currentPage + 1).mod(items.size)
+            pagerState.animateScrollToPage(nextPage)
         }
     }
 
@@ -66,8 +74,7 @@ fun BannerView(
                 .fillMaxWidth()
                 .height(170.dp)
         ) { page ->
-            val banner = items[page]
-            Card(
+            // 数据刷新与用户滑动同时发生时，旧页可能短暂存在；此时跳过即可。\n            val banner = items.getOrNull(page) ?: return@HorizontalPager\n            Card(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 12.dp, vertical = 6.dp)
