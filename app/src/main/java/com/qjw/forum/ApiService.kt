@@ -278,6 +278,13 @@ interface ApiService {
     ): BaseResponse
 
     @FormUrlEncoded
+    @POST("api/forum/delete_reply.php")
+    suspend fun deleteReply(
+        @Field("tid") tid: String,
+        @Field("pid") pid: String
+    ): BaseResponse
+
+    @FormUrlEncoded
     @POST("api/forum/delete_image.php")
     suspend fun deleteThreadImage(
         @Field("tid") tid: String,
