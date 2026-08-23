@@ -37,7 +37,7 @@ if (!$size || empty($size[0]) || empty($size[1])) output_original_image($source)
 
 $sourceWidth = intval($size[0]);
 $sourceHeight = intval($size[1]);
-$imageType = isset($size[2]) ? intval($size[2]) : 0);
+$imageType = isset($size[2]) ? intval($size[2]) : 0;
 
 /* GIF 保留原文件，保证横幅广告动画不会丢失。 */
 if ($imageType === IMAGETYPE_GIF || $sourceWidth <= $width ||
