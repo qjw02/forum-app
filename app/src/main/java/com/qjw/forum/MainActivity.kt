@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity(){
 
         UserStore.init(this)
         UnreadStore.init(this)
+        AppAnalytics.init(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
