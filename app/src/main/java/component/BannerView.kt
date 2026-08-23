@@ -22,7 +22,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -88,11 +92,16 @@ fun BannerView(
                     }
 
                     if (!banner.image.isNullOrBlank()) {
+                        val thumbnail = appThumbnailUrl(banner.image, 540)
+                        var loadOriginal by remember(banner.image) { mutableStateOf(false) }
                         Spacer(Modifier.width(12.dp))
                         AsyncImage(
-                            model = appThumbnailUrl(banner.image, 540) ?: banner.image,
+                            model = if (loadOriginal || thumbnail == banner.image) banner.image else thumbnail,
                             contentDescription = banner.subject,
                             contentScale = ContentScale.Crop,
+                            onError = {
+                                if (!loadOriginal && thumbnail != banner.image) loadOriginal = true
+                            },
                             modifier = Modifier
                                 .width(125.dp)
                                 .fillMaxHeight()
