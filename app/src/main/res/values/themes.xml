@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="Theme.QJWForum" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Android 11 及以下启动时显示的品牌页 -->
+    <style name="Theme.QJWForum.Splash" parent="Theme.QJWForum">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
 </resources>
