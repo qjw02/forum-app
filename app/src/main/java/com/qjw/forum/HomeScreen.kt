@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -211,10 +212,11 @@ fun HomeScreen(
                     )
                 }
 
-                items(
+                // 广告后台可能重复使用 id 或图片；将列表位置加入 key，滚动时不会因重复 key 闪退。
+                itemsIndexed(
                     items = homeData?.ads.orEmpty(),
-                    key = { it.id ?: it.image.orEmpty() }
-                ) { ad ->
+                    key = { index, ad -> "ad_${ad.id.orEmpty()}_${ad.image.orEmpty()}_$index" }
+                ) { _, ad ->
                     if (!ad.image.isNullOrBlank()) {
                         HomeAdBanner(ad = ad, onOpenThread = onOpenThread)
                     }
@@ -228,7 +230,10 @@ fun HomeScreen(
                     )
                 }
 
-                items(homeData?.hot.orEmpty(), key = { it.tid }) { post ->
+                itemsIndexed(
+                    items = homeData?.hot.orEmpty(),
+                    key = { index, post -> "hot_${post.tid}_$index" }
+                ) { _, post ->
                     PostCard(post = post, onClick = onOpenThread)
                 }
 
@@ -240,7 +245,10 @@ fun HomeScreen(
                     )
                 }
 
-                items(homeData?.new.orEmpty(), key = { it.tid }) { post ->
+                itemsIndexed(
+                    items = homeData?.new.orEmpty(),
+                    key = { index, post -> "new_${post.tid}_$index" }
+                ) { _, post ->
                     PostCard(post = post, onClick = onOpenThread)
                 }
             }
