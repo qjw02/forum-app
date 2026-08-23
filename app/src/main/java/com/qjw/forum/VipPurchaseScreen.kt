@@ -40,7 +40,7 @@ fun VipPurchaseScreen(onBack: () -> Unit) {
 
     LaunchedEffect(Unit) {
         try {
-            val result = ApiClient.api.getProfile()
+            val result = ApiClient.api.profile()
             if (result.code == 0) {
                 profile = result.data
             } else {
