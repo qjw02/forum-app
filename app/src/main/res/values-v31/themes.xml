@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 及以上的系统启动页 -->
+    <style name="Theme.QJWForum.Splash" parent="android:style/Theme.SplashScreen">
+        <item name="android:windowSplashScreenBackground">@color/qjw_splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="android:postSplashScreenTheme">@style/Theme.QJWForum</item>
+    </style>
+</resources>
