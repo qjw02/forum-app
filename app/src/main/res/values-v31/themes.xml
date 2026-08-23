@@ -4,6 +4,5 @@
     <style name="Theme.QJWForum.Splash" parent="android:style/Theme.SplashScreen">
         <item name="android:windowSplashScreenBackground">@color/qjw_splash_background</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
-        <item name="android:postSplashScreenTheme">@style/Theme.QJWForum</item>
     </style>
 </resources>
