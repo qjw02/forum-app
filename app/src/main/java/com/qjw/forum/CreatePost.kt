@@ -69,7 +69,7 @@ fun CreatePost(
     val images = remember { mutableStateListOf<Uri>() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val isAdvancedReport = selectedForum?.name == "高级报告"
+    val isAdvancedReport = selectedForum?.fid?.toString() == "2"
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -437,8 +437,8 @@ fun CreatePost(
                             fid = forum.fid.toString(),
                             subject = subject,
                             message = finalMessage,
-                            contact = if (sellContact) contact.trim() else "",
-                            price = if (sellContact) priceText.toIntOrNull() ?: 0 else 0
+                            contact = if (isAdvancedReport && sellContact) contact.trim() else "",
+                            price = if (isAdvancedReport && sellContact) priceText.toIntOrNull() ?: 0 else 0
                         )
 
                         if (result.code == 0) {
