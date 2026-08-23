@@ -40,11 +40,16 @@ import kotlinx.coroutines.launch
 @Composable
 private fun HomeAdBanner(ad: HomeAd, onOpenThread: (String) -> Unit) {
     var imageRatio by remember(ad.image) { mutableStateOf(6f) }
+    val thumbnail = appThumbnailUrl(ad.image, 1080)
+    var loadOriginal by remember(ad.image) { mutableStateOf(false) }
 
     AsyncImage(
-        model = appThumbnailUrl(ad.image, 1080) ?: ad.image,
+        model = if (loadOriginal || thumbnail == ad.image) ad.image else thumbnail,
         contentDescription = "广告",
         contentScale = ContentScale.Fit,
+        onError = {
+            if (!loadOriginal && thumbnail != ad.image) loadOriginal = true
+        },
         onSuccess = { state ->
             val size = state.painter.intrinsicSize
             if (size.width > 0f && size.height > 0f) {
