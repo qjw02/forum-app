@@ -43,6 +43,7 @@ fun MyContentScreen(
     var threads by remember(showReplies) { mutableStateOf<List<MyThreadItem>>(emptyList()) }
     var replies by remember(showReplies) { mutableStateOf<List<MyReplyItem>>(emptyList()) }
     var deleteTarget by remember { mutableStateOf<MyThreadItem?>(null) }
+    var deleteReplyTarget by remember { mutableStateOf<MyReplyItem?>(null) }
     var deleting by remember { mutableStateOf(false) }
     var reloadKey by remember(showReplies) { mutableStateOf(0) }
     var currentPage by remember(showReplies) { mutableStateOf(1) }
@@ -132,7 +133,11 @@ fun MyContentScreen(
             !showReplies && threads.isEmpty() -> EmptyContent("还没有发布主题")
 
             showReplies -> replies.forEach { reply ->
-                MyReplyCard(reply, onOpenThread)
+                MyReplyCard(
+                    reply = reply,
+                    onOpenThread = onOpenThread,
+                    onDelete = { deleteReplyTarget = reply }
+                )
                 Spacer(Modifier.height(10.dp))
             }
 
@@ -182,6 +187,39 @@ fun MyContentScreen(
             ) {
                 Text(if (loadingMore) "加载中…" else "加载更多（已显示 $loadedCount/$totalCount）")
             }
+        }
+
+        deleteReplyTarget?.let { reply ->
+            AlertDialog(
+                onDismissRequest = { deleteReplyTarget = null },
+                title = { Text("删除回复？") },
+                text = { Text("删除后不能恢复。") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            // 先关窗口，再请求删除；成功后重新拉取列表。
+                            deleteReplyTarget = null
+                            scope.launch {
+                                try {
+                                    val result = ApiClient.api.deleteReply(reply.tid, reply.pid)
+                                    if (result.code == 0) {
+                                        replies = replies.filterNot { it.pid == reply.pid }
+                                        totalCount = (totalCount - 1).coerceAtLeast(0)
+                                        reloadKey++
+                                    } else {
+                                        error = result.message ?: "删除回复失败"
+                                    }
+                                } catch (e: Exception) {
+                                    error = e.message ?: "删除回复失败"
+                                }
+                            }
+                        }
+                    ) { Text("确认删除") }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { deleteReplyTarget = null }) { Text("取消") }
+                }
+            )
         }
 
         deleteTarget?.let { thread ->
@@ -260,7 +298,8 @@ private fun MyThreadCard(
 @Composable
 private fun MyReplyCard(
     reply: MyReplyItem,
-    onOpenThread: (String, String?) -> Unit
+    onOpenThread: (String, String?) -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -278,6 +317,13 @@ private fun MyReplyCard(
                     text = reply.message,
                     maxLines = 2,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(onClick = onDelete) {
+                Text(
+                    text = "删除回复",
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         }
