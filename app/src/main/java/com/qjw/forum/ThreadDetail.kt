@@ -158,6 +158,9 @@ fun ThreadDetail(
 
     }
 
+    var deleteReplyPid by remember { mutableStateOf<String?>(null) }
+    var deletingReply by remember { mutableStateOf(false) }
+
 
 
     val scope =
@@ -536,6 +539,7 @@ fun ThreadDetail(
                         // 联系方式购买
                         // ===============================
 
+                        if (threadData.thread.fid.toString() == "2") {
                         threadData.contact?.let { contact ->
 
                             val highlightContact = threadData.thread.forum_name == "高级报告"
@@ -637,6 +641,7 @@ fun ThreadDetail(
                                 Modifier.height(15.dp)
                             )
 
+                        }
                         }
 
                         Text(
@@ -890,6 +895,17 @@ fun ThreadDetail(
 
                                     )
 
+                                    if (reply.author.uid.toString() == UserStore.getUid().toString()) {
+                                        TextButton(
+                                            onClick = { deleteReplyPid = reply.pid.toString() }
+                                        ) {
+                                            Text(
+                                                text = "删除回复",
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+
 
                                 }
 
@@ -935,7 +951,45 @@ fun ThreadDetail(
 
         }
 
-
+        deleteReplyPid?.let { pid ->
+            AlertDialog(
+                onDismissRequest = { if (!deletingReply) deleteReplyPid = null },
+                title = { Text("删除回复？") },
+                text = { Text("删除后不能恢复。") },
+                confirmButton = {
+                    Button(
+                        enabled = !deletingReply,
+                        onClick = {
+                            scope.launch {
+                                deletingReply = true
+                                try {
+                                    val result = ApiClient.api.deleteReply(tid, pid)
+                                    replyMsg = result.message ?: if (result.code == 0) "回复已删除" else "删除失败"
+                                    if (result.code == 0) {
+                                        loadThread(manual = true)
+                                        deleteReplyPid = null
+                                    }
+                                } catch (e: Exception) {
+                                    replyMsg = e.message ?: "删除回复失败"
+                                } finally {
+                                    deletingReply = false
+                                }
+                            }
+                        }
+                    ) {
+                        Text(if (deletingReply) "删除中..." else "确认删除")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        enabled = !deletingReply,
+                        onClick = { deleteReplyPid = null }
+                    ) {
+                        Text("取消")
+                    }
+                }
+            )
+        }
 
     }
 
