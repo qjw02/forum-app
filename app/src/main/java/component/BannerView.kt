@@ -72,7 +72,9 @@ fun BannerView(
                 .fillMaxWidth()
                 .height(170.dp)
         ) { page ->
-            // 数据刷新与用户滑动同时发生时，旧页可能短暂存在；此时跳过即可。\n            val banner = items.getOrNull(page) ?: return@HorizontalPager\n            Card(
+            // 数据刷新与用户滑动同时发生时，旧页可能短暂存在；此时跳过即可。
+            val banner = items.getOrNull(page) ?: return@HorizontalPager
+            Card(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 12.dp, vertical = 6.dp)
