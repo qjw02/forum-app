@@ -174,7 +174,7 @@ if(!$group || intval($group['allowpost']) <= 0 || !$forumAllowsGroup || ($access
 /* 只有“高级报告”板块允许出售联系方式。 */
 if($contact !== '' || $price > 0){
 
-    if($forum['name'] !== '高级报告'){
+    if(intval($fid) !== 2){
         echo json_encode([
             'code'=>403,
             'message'=>'只有高级报告板块可以出售联系方式'
