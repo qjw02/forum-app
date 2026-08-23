@@ -1,12 +1,18 @@
 package com.qjw.forum.navigation
 
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.qjw.forum.*
 import com.qjw.forum.component.BottomBar
 import kotlinx.coroutines.delay
@@ -16,6 +22,12 @@ import kotlinx.coroutines.delay
 @Composable
 fun AppNav(){
 
+    val context = LocalContext.current
+    var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+
+    LaunchedEffect(Unit) {
+        AppUpdateManager.check { updateInfo = it }
+    }
 
     var page by remember {
 
@@ -24,6 +36,10 @@ fun AppNav(){
     }
 
     val unreadCount = UnreadStore.totalCount
+
+    LaunchedEffect(page) {
+        AppAnalytics.screen(page.substringBefore("/"))
+    }
 
     LaunchedEffect(UserStore.getToken()) {
         while (true) {
@@ -849,6 +865,23 @@ fun AppNav(){
 
         }
 
+
+    updateInfo?.let { update ->
+        AlertDialog(
+            onDismissRequest = { if (!update.force) updateInfo = null },
+            title = { Text("发现新版本 ${update.versionName}") },
+            text = { Text(update.message) },
+            confirmButton = {
+                Button(onClick = {
+                    AppAnalytics.action("app_update_opened", update.versionName)
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl)))
+                }) { Text("立即更新") }
+            },
+            dismissButton = if (!update.force) {
+                { Button(onClick = { updateInfo = null }) { Text("稍后再说") } }
+            } else null
+        )
+    }
 
 
     }
