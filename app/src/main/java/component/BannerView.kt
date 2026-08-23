@@ -26,7 +26,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,7 +61,7 @@ fun BannerView(
         while (isActive) {
             delay(4000)
             if (!isActive || items.size <= 1) break
-            val nextPage = (pagerState.currentPage + 1).mod(items.size)
+            val nextPage = (pagerState.currentPage + 1) % items.size
             pagerState.animateScrollToPage(nextPage)
         }
     }
