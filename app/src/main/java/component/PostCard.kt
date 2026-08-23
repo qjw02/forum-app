@@ -14,6 +14,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -68,11 +72,17 @@ fun PostCard(
             }
 
             if (!post.image.isNullOrBlank()) {
+                val thumbnail = appThumbnailUrl(post.image, 360)
+                var loadOriginal by remember(post.image) { mutableStateOf(false) }
                 Spacer(Modifier.width(12.dp))
                 AsyncImage(
-                    model = appThumbnailUrl(post.image, 360) ?: post.image,
+                    model = if (loadOriginal || thumbnail == post.image) post.image else thumbnail,
                     contentDescription = post.subject,
                     contentScale = ContentScale.Crop,
+                    onError = {
+                        // 缩略图接口不可用时，自动回退到原图，避免列表图片空白。
+                        if (!loadOriginal && thumbnail != post.image) loadOriginal = true
+                    },
                     modifier = Modifier.size(width = 82.dp, height = 62.dp)
                 )
             }
