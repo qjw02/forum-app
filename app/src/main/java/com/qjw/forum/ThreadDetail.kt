@@ -960,6 +960,7 @@ fun ThreadDetail(
                     Button(
                         enabled = !deletingReply,
                         onClick = {
+                            deleteReplyPid = null
                             scope.launch {
                                 deletingReply = true
                                 try {
