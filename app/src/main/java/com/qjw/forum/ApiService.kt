@@ -67,7 +67,11 @@ interface ApiService {
         pid: String? = null,
 
         @Query("page")
-        page: Int = 1
+        page: Int = 1,
+
+        // 每次打开主题都使用一个新的请求地址，避免 CDN 返回删除回复前的旧缓存。
+        @Query("_")
+        cacheBust: Long = System.currentTimeMillis()
     ): ThreadResponse
 
 
