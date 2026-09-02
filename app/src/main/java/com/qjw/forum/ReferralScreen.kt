@@ -42,13 +42,22 @@ import java.util.Locale
 fun ReferralScreen() {
     val context = LocalContext.current
     val uid = UserStore.getUid()
-    val domain = DomainManager.getDomain().trimEnd('/')
-    val referralLink = domain + "/member.php?mod=register&referid=" + uid
+    var referralLink by remember(uid) {
+        mutableStateOf(buildReferralLink(uid))
+    }
+    val linkReady = referralLink.isNotBlank()
     var copied by remember { mutableStateOf(false) }
     var visitCount by remember { mutableStateOf<Int?>(null) }
     var stats by remember { mutableStateOf<ReferralStatsData?>(null) }
     var loadingStats by remember { mutableStateOf(true) }
     var statsError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uid) {
+        // 先使用本机已验证的地址，再刷新动态域名，避免推广链接出现未初始化状态。
+        referralLink = buildReferralLink(uid)
+        DomainManager.updateDomain()
+        referralLink = buildReferralLink(uid)
+    }
 
     LaunchedEffect(uid) {
         loadingStats = true
@@ -166,13 +175,20 @@ fun ReferralScreen() {
 
                 Button(
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = linkReady,
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("推广链接", referralLink))
                         copied = true
                     }
                 ) {
-                    Text(if (copied) "已复制推广链接" else "复制推广链接")
+                    Text(
+                        when {
+                            !linkReady -> "正在生成推广链接..."
+                            copied -> "已复制推广链接"
+                            else -> "复制推广链接"
+                        }
+                    )
                 }
             }
         }
@@ -280,14 +296,27 @@ fun ReferralScreen() {
 
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
+            enabled = linkReady,
             onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("推广链接", referralLink))
                 copied = true
             }
         ) {
-            Text("再次复制链接")
+            Text(if (linkReady) "再次复制链接" else "正在生成推广链接...")
         }
+    }
+}
+
+private fun buildReferralLink(uid: String): String {
+    val domain = DomainManager.getDomain()
+        .trim()
+        .trimEnd('/')
+
+    return if (domain.startsWith("https://") || domain.startsWith("http://")) {
+        "$domain/member.php?mod=register&referid=$uid"
+    } else {
+        ""
     }
 }
 
