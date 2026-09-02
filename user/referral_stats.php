@@ -94,7 +94,7 @@ try {
     // 已记录的实际被邀请会员名单，包含 APP 和之后的网站原生注册。
     $recordedRows = DB::fetch_all(
         "SELECT l.referred_uid, l.money_reward, l.coin_reward,
-                l.contribution_reward, l.dateline, m.username
+                l.contribution_reward, l.source, l.dateline, m.username
          FROM pre_app_referral_log l
          LEFT JOIN pre_common_member m ON m.uid = l.referred_uid
          WHERE l.referrer_uid = %d
