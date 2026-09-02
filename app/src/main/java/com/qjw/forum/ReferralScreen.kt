@@ -42,8 +42,9 @@ import java.util.Locale
 fun ReferralScreen() {
     val context = LocalContext.current
     val uid = UserStore.getUid()
-    var referralLink by remember(uid) {
-        mutableStateOf(buildReferralLink(uid))
+    val username = UserStore.getUsername().ifBlank { "好友" }
+    var referralLink by remember(uid, username) {
+        mutableStateOf(buildReferralLink(username, uid))
     }
     val linkReady = referralLink.isNotBlank()
     var copied by remember { mutableStateOf(false) }
@@ -54,9 +55,9 @@ fun ReferralScreen() {
 
     LaunchedEffect(uid) {
         // 先使用本机已验证的地址，再刷新动态域名，避免推广链接出现未初始化状态。
-        referralLink = buildReferralLink(uid)
+        referralLink = buildReferralLink(username, uid)
         DomainManager.updateDomain()
-        referralLink = buildReferralLink(uid)
+        referralLink = buildReferralLink(username, uid)
     }
 
     LaunchedEffect(uid) {
@@ -308,13 +309,13 @@ fun ReferralScreen() {
     }
 }
 
-private fun buildReferralLink(uid: String): String {
+private fun buildReferralLink(username: String, uid: Int): String {
     val domain = DomainManager.getDomain()
         .trim()
         .trimEnd('/')
 
     return if (domain.startsWith("https://") || domain.startsWith("http://")) {
-        "$domain/member.php?mod=register&referid=$uid"
+        "$username 邀请您访问成都千娇网 $domain/?fromuid=$uid"
     } else {
         ""
     }
