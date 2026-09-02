@@ -247,12 +247,10 @@ fun ReferralScreen() {
                 ) {
                     Column(modifier = Modifier.padding(15.dp)) {
                         Text(item.username ?: "新会员", fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(4.dp))
-                        Text("金钱 +" + (item.money ?: 0) + "    C币 +" + (item.coin ?: 0) + "    贡献 +" + (item.contribution ?: 0))
                         item.dateline?.takeIf { it > 0 }?.let {
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                "奖励时间：" + SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(it * 1000)),
+                                "注册时间：" + SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(it * 1000)),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
