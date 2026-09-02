@@ -325,7 +325,10 @@ interface ApiService {
     ): BaseResponse
 
     @GET("api/user/referral_stats.php")
-    suspend fun getReferralStats(): ReferralStatsResponse
+    suspend fun getReferralStats(
+        // 奖励数据每次进入推广页都取最新值，避免 CDN 返回旧统计。
+        @Query("_") cacheBust: Long = System.currentTimeMillis()
+    ): ReferralStatsResponse
 
     @GET("api/user/friends.php")
     suspend fun getFriends(
