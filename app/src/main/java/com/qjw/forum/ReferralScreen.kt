@@ -42,9 +42,8 @@ import java.util.Locale
 fun ReferralScreen() {
     val context = LocalContext.current
     val uid = UserStore.getUid()
-    val username = UserStore.getUsername().ifBlank { "好友" }
-    var referralLink by remember(uid, username) {
-        mutableStateOf(buildReferralLink(username, uid))
+    var referralLink by remember(uid) {
+        mutableStateOf(buildReferralLink(uid))
     }
     val linkReady = referralLink.isNotBlank()
     var copied by remember { mutableStateOf(false) }
@@ -55,9 +54,9 @@ fun ReferralScreen() {
 
     LaunchedEffect(uid) {
         // 先使用本机已验证的地址，再刷新动态域名，避免推广链接出现未初始化状态。
-        referralLink = buildReferralLink(username, uid)
+        referralLink = buildReferralLink(uid)
         DomainManager.updateDomain()
-        referralLink = buildReferralLink(username, uid)
+        referralLink = buildReferralLink(uid)
     }
 
     LaunchedEffect(uid) {
@@ -140,7 +139,7 @@ fun ReferralScreen() {
                 Spacer(Modifier.height(8.dp))
                 Text("金钱 +" + (stats?.total_money ?: 0) + "    C币 +" + (stats?.total_coin ?: 0) + "    贡献 +" + (stats?.total_contribution ?: 0))
                 Spacer(Modifier.height(5.dp))
-                Text("仅统计 APP 推广注册已记录的奖励；实际积分以论坛后台为准。", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Text("与网站推广规则同步；实际积分以论坛后台为准。", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
 
@@ -309,13 +308,13 @@ fun ReferralScreen() {
     }
 }
 
-private fun buildReferralLink(username: String, uid: Int): String {
+private fun buildReferralLink(uid: Int): String {
     val domain = DomainManager.getDomain()
         .trim()
         .trimEnd('/')
 
     return if (domain.startsWith("https://") || domain.startsWith("http://")) {
-        "$username 邀请您访问成都千娇网 $domain/?fromuid=$uid"
+        "$domain/?fromuid=$uid"
     } else {
         ""
     }
