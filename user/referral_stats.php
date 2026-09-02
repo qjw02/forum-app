@@ -5,6 +5,7 @@ require_once '/www/wwwroot/qq/wwwroot/source/class/class_core.php';
 
 C::app()->init();
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 function app_referral_ensure_table() {
     DB::query("CREATE TABLE IF NOT EXISTS `pre_app_referral_log` (
