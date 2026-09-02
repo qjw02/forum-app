@@ -12,14 +12,23 @@ function app_referral_ensure_table() {
         `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `referrer_uid` int(10) unsigned NOT NULL,
         `referred_uid` int(10) unsigned NOT NULL,
-        `money_reward` int(10) NOT NULL DEFAULT '50',
-        `coin_reward` int(10) NOT NULL DEFAULT '10',
-        `contribution_reward` int(10) NOT NULL DEFAULT '1',
+        `money_reward` int(10) NOT NULL DEFAULT '0',
+        `coin_reward` int(10) NOT NULL DEFAULT '0',
+        `contribution_reward` int(10) NOT NULL DEFAULT '0',
+        `source` varchar(16) NOT NULL DEFAULT 'app',
         `dateline` int(10) unsigned NOT NULL DEFAULT '0',
         PRIMARY KEY (`id`),
         UNIQUE KEY `referred_uid` (`referred_uid`),
-        KEY `referrer_uid` (`referrer_uid`)
+        KEY `referrer_uid` (`referrer_uid`),
+        KEY `source` (`source`)
     ) ENGINE=MyISAM DEFAULT CHARSET=utf8");
+
+    $sourceColumn = DB::fetch_first("SHOW COLUMNS FROM `pre_app_referral_log` LIKE 'source'");
+    if (empty($sourceColumn)) {
+        DB::query("ALTER TABLE `pre_app_referral_log`
+            ADD COLUMN `source` varchar(16) NOT NULL DEFAULT 'app' AFTER `contribution_reward`");
+        DB::query("ALTER TABLE `pre_app_referral_log` ADD KEY `source` (`source`)");
+    }
 }
 
 $token = $_SERVER['HTTP_X_TOKEN'] ?? '';
@@ -35,7 +44,7 @@ $uid = intval($tokenData['uid']);
 try {
     app_referral_ensure_table();
 
-    // 1) 网站原生推广记录（网页“访问推广”使用的同一份规则）。
+    // 原生 Discuz 已实际发放的推广注册奖励。
     $rule = DB::fetch_first(
         "SELECT rid, extcredits1, extcredits2, extcredits3, extcredits4,
                 extcredits5, extcredits6, extcredits7, extcredits8
@@ -43,7 +52,6 @@ try {
          WHERE rulename = 'promotion_register'
          LIMIT 1"
     );
-
     $nativeCount = 0;
     $nativeLatestTime = 0;
     if ($rule && intval($rule['rid']) > 0) {
@@ -68,23 +76,23 @@ try {
         }
         return 0;
     };
-
     $nativeMoney = $nativeCount * $rewardValue('金钱');
     $nativeCoin = $nativeCount * $rewardValue('C币');
     $nativeContribution = $nativeCount * $rewardValue('贡献');
 
-    // 2) 早期 APP 注册奖励记录。此前它已实际发放积分，必须合并才能显示完整历史累计。
-    $legacySummary = DB::fetch_first(
+    // 早期 APP 注册走的是独立奖励流程，和原生奖励不重复。
+    $appSummary = DB::fetch_first(
         "SELECT COUNT(*) AS registered_count,
                 COALESCE(SUM(money_reward), 0) AS total_money,
                 COALESCE(SUM(coin_reward), 0) AS total_coin,
                 COALESCE(SUM(contribution_reward), 0) AS total_contribution
          FROM pre_app_referral_log
-         WHERE referrer_uid = %d",
+         WHERE referrer_uid = %d AND source = 'app'",
         array($uid)
     );
 
-    $legacyRows = DB::fetch_all(
+    // 已记录的实际被邀请会员名单，包含 APP 和之后的网站原生注册。
+    $recordedRows = DB::fetch_all(
         "SELECT l.referred_uid, l.money_reward, l.coin_reward,
                 l.contribution_reward, l.dateline, m.username
          FROM pre_app_referral_log l
@@ -93,9 +101,10 @@ try {
          ORDER BY l.id DESC LIMIT 20",
         array($uid)
     );
-
     $rewards = array();
-    foreach ($legacyRows as $row) {
+    $nativeRows = 0;
+    foreach ($recordedRows as $row) {
+        if (($row['source'] ?? '') === 'native') $nativeRows++;
         $rewards[] = array(
             'uid' => intval($row['referred_uid']),
             'username' => !empty($row['username']) ? $row['username'] : '新会员',
@@ -106,10 +115,11 @@ try {
         );
     }
 
-    if ($nativeCount > 0) {
+    // 旧原生推广没有可追溯成员名单时，保留一条汇总提示。
+    if ($nativeCount > 0 && $nativeRows === 0) {
         $rewards[] = array(
             'uid' => 0,
-            'username' => '网站原生推广注册（' . $nativeCount . '）',
+            'username' => '历史网站推广注册（' . $nativeCount . '）',
             'money' => $nativeMoney,
             'coin' => $nativeCoin,
             'contribution' => $nativeContribution,
@@ -126,10 +136,10 @@ try {
         'code' => 0,
         'data' => array(
             'visit_count' => $visitCount,
-            'registered_count' => $nativeCount + intval($legacySummary['registered_count']),
-            'total_money' => $nativeMoney + intval($legacySummary['total_money']),
-            'total_coin' => $nativeCoin + intval($legacySummary['total_coin']),
-            'total_contribution' => $nativeContribution + intval($legacySummary['total_contribution']),
+            'registered_count' => $nativeCount + intval($appSummary['registered_count']),
+            'total_money' => $nativeMoney + intval($appSummary['total_money']),
+            'total_coin' => $nativeCoin + intval($appSummary['total_coin']),
+            'total_contribution' => $nativeContribution + intval($appSummary['total_contribution']),
             'rewards' => $rewards
         )
     ), JSON_UNESCAPED_UNICODE);
