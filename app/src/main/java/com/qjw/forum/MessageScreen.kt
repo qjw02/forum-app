@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.core.text.HtmlCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -327,6 +328,14 @@ private fun NotificationCard(
             }
         }
     }
+}
+
+private fun cleanDiscuzText(raw: String): String {
+    // 系统通知的用户组名称常被包在 <a> 标签中；转换为纯文字时保留标签内容。
+    return HtmlCompat.fromHtml(raw, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        .toString()
+        .replace(' ', ' ')
+        .trim()
 }
 
 private fun notificationTitle(notification: NotificationItem): String {
