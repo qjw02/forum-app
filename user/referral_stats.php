@@ -49,7 +49,7 @@ try {
         "SELECT rid, extcredits1, extcredits2, extcredits3, extcredits4,
                 extcredits5, extcredits6, extcredits7, extcredits8
          FROM pre_common_credit_rule
-         WHERE rulename = 'promotion_register'
+         WHERE action = 'promotion_register'
          LIMIT 1"
     );
     $nativeCount = 0;
