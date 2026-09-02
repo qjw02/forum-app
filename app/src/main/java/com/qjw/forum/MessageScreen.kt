@@ -313,7 +313,7 @@ private fun NotificationCard(
             if (!notification.note.isNullOrBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = cleanDiscuzText(notification.note),
+                    text = renderDiscuzNotificationText(notification.note),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -330,7 +330,7 @@ private fun NotificationCard(
     }
 }
 
-private fun cleanDiscuzText(raw: String): String {
+private fun renderDiscuzNotificationText(raw: String): String {
     // 系统通知的用户组名称常被包在 <a> 标签中；转换为纯文字时保留标签内容。
     return HtmlCompat.fromHtml(raw, HtmlCompat.FROM_HTML_MODE_LEGACY)
         .toString()
