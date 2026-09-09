@@ -1,5 +1,7 @@
 package com.qjw.forum
 
+import androidx.activity.compose.BackHandler
+
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -315,13 +317,15 @@ fun ThreadDetail(
     val swipeBackModifier = rememberThreadEdgeSwipeBackModifier {
         onBack(data?.thread?.fid ?: "")
     }
+    BackHandler {
+        onBack(data?.thread?.fid ?: "")
+    }
 
     Box(
 
         modifier =
             Modifier
                 .fillMaxSize()
-                .then(swipeBackModifier)
 
     ){
 
@@ -402,6 +406,7 @@ fun ThreadDetail(
                                 .fillMaxSize()
                                 .padding(horizontal = 12.dp)
                                 .widthIn(max = 600.dp)
+                                .then(swipeBackModifier)
 
                     ){
 
