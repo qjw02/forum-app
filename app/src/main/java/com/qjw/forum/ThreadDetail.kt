@@ -2,6 +2,7 @@ package com.qjw.forum
 
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -14,6 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.consume
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -309,10 +313,16 @@ fun ThreadDetail(
 
 
 
+    val swipeBackModifier = rememberThreadEdgeSwipeBackModifier {
+        onBack(data?.thread?.fid ?: "")
+    }
+
     Box(
 
         modifier =
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
+                .then(swipeBackModifier)
 
     ){
 
@@ -996,4 +1006,41 @@ fun ThreadDetail(
 
 
 
+}
+
+@Composable
+private fun rememberThreadEdgeSwipeBackModifier(onBack: () -> Unit): Modifier {
+    val density = LocalDensity.current
+    val latestOnBack by rememberUpdatedState(onBack)
+    val edgeWidth = with(density) { 32.dp.toPx() }
+    val triggerDistance = with(density) { 96.dp.toPx() }
+
+    return Modifier.pointerInput(edgeWidth, triggerDistance) {
+        var startedAtEdge = false
+        var movedRight = 0f
+
+        detectHorizontalDragGestures(
+            onDragStart = { offset ->
+                startedAtEdge = offset.x <= edgeWidth
+                movedRight = 0f
+            },
+            onHorizontalDrag = { change, dragAmount ->
+                if (startedAtEdge && dragAmount > 0f) {
+                    movedRight += dragAmount
+                    change.consume()
+                }
+            },
+            onDragEnd = {
+                if (startedAtEdge && movedRight >= triggerDistance) {
+                    latestOnBack()
+                }
+                startedAtEdge = false
+                movedRight = 0f
+            },
+            onDragCancel = {
+                startedAtEdge = false
+                movedRight = 0f
+            }
+        )
+    }
 }
