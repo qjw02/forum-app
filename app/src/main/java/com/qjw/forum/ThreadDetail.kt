@@ -968,10 +968,18 @@ fun ThreadDetail(
                                     }
 
                                     val parsedQuote = splitReplyQuote(reply.message)
+                                    parsedQuote?.author?.let { targetName ->
+                                        Text(
+                                            text = "${reply.author.username} 回复 @$targetName",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
                                     parsedQuote?.let { quote ->
                                         Card(
                                             colors = CardDefaults.cardColors(
-                                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                                containerColor = MaterialTheme.colorScheme.surfaceVariant
                                             ),
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -994,7 +1002,15 @@ fun ThreadDetail(
                                     }
 
                                     Text(
-                                        cleanDiscuzText(parsedQuote?.replyText ?: reply.message)
+                                        text = if (parsedQuote != null) "回复内容" else "内容",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                    Text(
+                                        text = cleanDiscuzText(parsedQuote?.replyText ?: reply.message),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.padding(top = 2.dp)
                                     )
 
                                     Row {
