@@ -93,6 +93,12 @@ fun cleanDiscuzText(text:String):String{
             ""
         )
 
+        // 清理 Discuz 排版 BBCode，避免引用中显示 [color=...] 等代码。
+        .replace(
+            Regex("\\[/?(?:color|size|font|align|b|i|u|s)(?:=[^\\]]*)?\\]", RegexOption.IGNORE_CASE),
+            ""
+        )
+
         .trim()
 
 }
@@ -110,9 +116,17 @@ private val replyQuoteRegex = Regex(
 
 private fun splitReplyQuote(raw: String): ParsedReplyQuote? {
     val match = replyQuoteRegex.find(raw) ?: return null
+    val quotedText = match.groupValues[2].trim()
+    val inlineAuthor = cleanDiscuzText(quotedText)
+        .lineSequence()
+        .firstOrNull()
+        ?.substringBefore("发表于")
+        ?.trim()
+        ?.takeIf { it.isNotBlank() }
+
     return ParsedReplyQuote(
-        author = match.groupValues[1].trim().ifBlank { null },
-        quotedText = match.groupValues[2].trim(),
+        author = match.groupValues[1].trim().ifBlank { inlineAuthor },
+        quotedText = quotedText,
         replyText = raw.removeRange(match.range).trim()
     )
 }
@@ -1002,12 +1016,14 @@ fun ThreadDetail(
                                         }
                                     }
 
-                                    Text(
-                                        text = if (parsedQuote != null) "回复内容" else "内容",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
+                                    if (parsedQuote != null) {
+                                        Text(
+                                            text = "回复内容",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(top = 4.dp)
+                                        )
+                                    }
                                     Text(
                                         text = cleanDiscuzText(parsedQuote?.replyText ?: replySource),
                                         style = MaterialTheme.typography.bodyLarge,
