@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.qjw.forum.component.PostCard
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @Composable
