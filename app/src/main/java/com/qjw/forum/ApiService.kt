@@ -133,7 +133,9 @@ interface ApiService {
     suspend fun getForumThreads(
         @Query("fid") fid: String,
         @Query("page") page: Int = 1,
-        @Query("page_size") pageSize: Int = 30
+        @Query("page_size") pageSize: Int = 30,
+        // 板块页必须绕过 CDN 旧缓存，保证网页删帖后 APP 同步消失。
+        @Query("_") cacheBust: Long = System.currentTimeMillis()
     ): ForumThreadResponse
 
 
@@ -250,7 +252,10 @@ interface ApiService {
         scope: String,
 
         @Query("fid")
-        fid: String? = null
+        fid: String? = null,
+
+        @Query("_")
+        cacheBust: Long = System.currentTimeMillis()
     ): ContentVersionResponse
 
 
