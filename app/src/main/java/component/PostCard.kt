@@ -30,7 +30,8 @@ import com.qjw.forum.appThumbnailUrl
 fun PostCard(
     post: Post,
     onClick: (String) -> Unit,
-    showPinnedLabel: Boolean = false
+    showPinnedLabel: Boolean = false,
+    titleMaxLines: Int = 2
 ) {
     Card(
         modifier = Modifier
@@ -53,7 +54,7 @@ fun PostCard(
                         post.subject
                     },
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2
+                    maxLines = titleMaxLines
                 )
 
                 Spacer(Modifier.height(8.dp))
