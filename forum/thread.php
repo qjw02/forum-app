@@ -670,6 +670,9 @@ foreach($posts as $row){
 
         'message'=>parse_message_html($raw),
 
+        // 供 APP 精确识别 [quote] 引用边界；网页端仍继续使用已渲染 message。
+        'raw_message'=>$raw,
+
 
 
         'images'=>parse_images($raw),
