@@ -47,7 +47,10 @@ fun ForumThreadListScreen(
     onBack: () -> Unit
 ) {
     val cachedForum = remember(fid) { ContentCache.getForum(fid) }
-    var forumData by remember(fid) { mutableStateOf(cachedForum?.data) }
+    fun visibleThreads(data: ForumThreadData): ForumThreadData =
+        data.copy(list = data.list.filter { (it.displayorder ?: 0) >= 0 })
+
+    var forumData by remember(fid) { mutableStateOf(cachedForum?.data?.let(::visibleThreads)) }
     var loading by remember(fid) { mutableStateOf(cachedForum == null) }
     var message by remember(fid) { mutableStateOf("") }
     var canCreatePost by remember(fid) { mutableStateOf(UserStore.isLogin()) }
@@ -84,12 +87,13 @@ fun ForumThreadListScreen(
 
                 val result = ApiClient.api.getForumThreads(fid, page = 1)
                 if (result.code == 0 && result.data != null) {
-                    forumData = result.data
-                    currentPage = result.data.page
+                    val visibleData = visibleThreads(result.data)
+                    forumData = visibleData
+                    currentPage = visibleData.page
                     ContentCache.saveForum(
                         fid,
                         version ?: cachedForum?.version ?: "manual",
-                        result.data
+                        visibleData
                     )
                 } else {
                     message = result.message ?: "加载失败"
@@ -113,7 +117,7 @@ fun ForumThreadListScreen(
                 val nextPage = currentPage + 1
                 val result = ApiClient.api.getForumThreads(fid, page = nextPage)
                 if (result.code == 0 && result.data != null) {
-                    val next = result.data
+                    val next = visibleThreads(result.data)
                     val merged = current.list + next.list.filter { incoming ->
                         current.list.none { it.tid == incoming.tid }
                     }
