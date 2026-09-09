@@ -31,7 +31,7 @@ if ($scope === 'home') {
     );
 
     // 精华、置顶或后台公告变化时才通知 APP 更新首页缓存。
-    $version = md5('home_v3|' . json_encode(array(
+    $version = md5('home_v4|' . json_encode(array(
         'threads' => $latest ?: array(),
         'announcement' => $announcement ?: array(),
         'ads' => is_readable(__DIR__ . '/../home/ads.json') ? md5_file(__DIR__ . '/../home/ads.json') : ''
@@ -57,7 +57,7 @@ if ($scope === 'home') {
     $threadCount = DB::result_first(
         "SELECT COUNT(*)
          FROM pre_forum_thread
-         WHERE fid=%d",
+         WHERE fid=%d AND displayorder>=0",
         array($fid)
     );
 
