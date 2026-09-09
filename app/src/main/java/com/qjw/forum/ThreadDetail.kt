@@ -822,7 +822,9 @@ fun ThreadDetail(
                                                             .replace("]", "")
                                                         val quoteBody = cleanDiscuzText(target.rawMessage ?: target.message)
                                                             .take(300)
-                                                        "[quote=$quoteAuthor]$quoteBody[/quote]\n" +
+                                                        "[quote][color=#999999]$quoteAuthor 发表于 " +
+                                                            formatForumTime(target.dateline) +
+                                                            "[/color]\n$quoteBody[/quote]\n" +
                                                             "回复 @$quoteAuthor：${replyText.trim()}"
                                                     } ?: replyText.trim()
 
@@ -1167,8 +1169,10 @@ fun ThreadDetail(
                                         val quoteAuthor = it.author.username
                                             .replace("[", "")
                                             .replace("]", "")
-                                        val quoteBody = cleanDiscuzText(it.message).take(300)
-                                        "[quote=$quoteAuthor]$quoteBody[/quote]\n" +
+                                        val quoteBody = cleanDiscuzText(it.rawMessage ?: it.message).take(300)
+                                        "[quote][color=#999999]$quoteAuthor 发表于 " +
+                                            formatForumTime(it.dateline) +
+                                            "[/color]\n$quoteBody[/quote]\n" +
                                             "回复 @$quoteAuthor：${replyText.trim()}"
                                     } ?: replyText.trim()
                                     val result = ApiClient.api.reply(tid, payload)
