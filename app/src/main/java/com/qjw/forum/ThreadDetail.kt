@@ -773,6 +773,11 @@ fun ThreadDetail(
 
 
 
+                                    if (replyText.trim().isBlank()) {
+                                        replyMsg = "请输入回复内容"
+                                        return@Button
+                                    }
+
                                     scope.launch{
 
 
@@ -791,7 +796,7 @@ fun ThreadDetail(
                                                             .replace("]", "")
                                                         val quoteBody = cleanDiscuzText(target.message)
                                                             .take(300)
-                                                        "[quote=$quoteAuthor]$quoteBody[/quote]\\n" +
+                                                        "[quote=$quoteAuthor]$quoteBody[/quote]\n" +
                                                             "回复 @$quoteAuthor：${replyText.trim()}"
                                                     } ?: replyText.trim()
 
@@ -811,6 +816,7 @@ fun ThreadDetail(
 
                                                 ProfileCache.clear()
                                                 replyText=""
+                                                replyTarget = null
 
 
                                                 PostCache.clear()
