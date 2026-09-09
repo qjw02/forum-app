@@ -50,7 +50,7 @@ if ($scope === 'home') {
     $latestPostTime = DB::result_first(
         "SELECT MAX(lastpost)
          FROM pre_forum_thread
-         WHERE fid=%d",
+         WHERE fid=%d AND displayorder>=0",
         array($fid)
     );
 
@@ -61,7 +61,7 @@ if ($scope === 'home') {
         array($fid)
     );
 
-    $version = md5('forum_v3|' . $fid . '|' . $latestPostTime . '|' . $threadCount);
+    $version = md5('forum_v4|' . $fid . '|' . $latestPostTime . '|' . $threadCount);
 } elseif ($scope === 'forums') {
     $latestForum = DB::fetch_first(
         "SELECT fid, displayorder, name
