@@ -49,6 +49,8 @@ fun ForumThreadListScreen(
     var canCreatePost by remember(fid) { mutableStateOf(UserStore.isLogin()) }
     var permissionNote by remember(fid) { mutableStateOf("") }
     var refreshing by remember(fid) { mutableStateOf(false) }
+    var loadingMore by remember(fid) { mutableStateOf(false) }
+    var currentPage by remember(fid) { mutableStateOf(cachedForum?.data?.page ?: 1) }
     val scope = rememberCoroutineScope()
     val swipeBackModifier = rememberEdgeSwipeBackModifier(onBack)
 
@@ -74,9 +76,10 @@ fun ForumThreadListScreen(
                     // 兼容尚未同步权限接口的服务器，继续请求原有帖子列表。
                 }
 
-                val result = ApiClient.api.getForumThreads(fid)
+                val result = ApiClient.api.getForumThreads(fid, page = 1)
                 if (result.code == 0 && result.data != null) {
                     forumData = result.data
+                    currentPage = result.data.page
                     ContentCache.saveForum(
                         fid,
                         version ?: cachedForum?.version ?: "manual",
@@ -90,6 +93,34 @@ fun ForumThreadListScreen(
             } finally {
                 loading = false
                 refreshing = false
+            }
+        }
+    }
+
+    fun loadMoreThreads() {
+        val current = forumData ?: return
+        if (loadingMore || current.list.size >= current.total) return
+
+        scope.launch {
+            loadingMore = true
+            try {
+                val nextPage = currentPage + 1
+                val result = ApiClient.api.getForumThreads(fid, page = nextPage)
+                if (result.code == 0 && result.data != null) {
+                    val next = result.data
+                    val merged = current.list + next.list.filter { incoming ->
+                        current.list.none { it.tid == incoming.tid }
+                    }
+                    forumData = next.copy(list = merged)
+                    currentPage = next.page
+                    ContentCache.saveForum(fid, "page_" + nextPage, forumData!!)
+                } else {
+                    message = result.message ?: "加载更多主题失败"
+                }
+            } catch (_: Exception) {
+                message = "加载更多主题失败，请稍后重试"
+            } finally {
+                loadingMore = false
             }
         }
     }
@@ -215,6 +246,24 @@ fun ForumThreadListScreen(
                             onClick = onOpenThread,
                             titleMaxLines = Int.MAX_VALUE
                         )
+                    }
+
+                    if (forumData!!.list.size < forumData!!.total) {
+                        item(key = "load_more_threads") {
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                enabled = !loadingMore,
+                                onClick = { loadMoreThreads() }
+                            ) {
+                                Text(
+                                    if (loadingMore) "加载中…"
+                                    else "加载更多主题（已显示 " +
+                                        forumData!!.list.size + "/" + forumData!!.total + "）"
+                                )
+                            }
+                        }
                     }
                 }
             }
