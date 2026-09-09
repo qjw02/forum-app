@@ -805,7 +805,7 @@ fun ThreadDetail(
                                                         val quoteAuthor = target.author.username
                                                             .replace("[", "")
                                                             .replace("]", "")
-                                                        val quoteBody = cleanDiscuzText(target.message)
+                                                        val quoteBody = cleanDiscuzText(target.rawMessage ?: target.message)
                                                             .take(300)
                                                         "[quote=$quoteAuthor]$quoteBody[/quote]\n" +
                                                             "回复 @$quoteAuthor：${replyText.trim()}"
@@ -967,7 +967,8 @@ fun ThreadDetail(
                                         )
                                     }
 
-                                    val parsedQuote = splitReplyQuote(reply.message)
+                                    val replySource = reply.rawMessage ?: reply.message
+                                    val parsedQuote = splitReplyQuote(replySource)
                                     parsedQuote?.author?.let { targetName ->
                                         Text(
                                             text = "${reply.author.username} 回复 @$targetName",
@@ -1008,7 +1009,7 @@ fun ThreadDetail(
                                         modifier = Modifier.padding(top = 4.dp)
                                     )
                                     Text(
-                                        text = cleanDiscuzText(parsedQuote?.replyText ?: reply.message),
+                                        text = cleanDiscuzText(parsedQuote?.replyText ?: replySource),
                                         style = MaterialTheme.typography.bodyLarge,
                                         modifier = Modifier.padding(top = 2.dp)
                                     )
@@ -1106,7 +1107,7 @@ fun ThreadDetail(
                                 Column(modifier = Modifier.padding(10.dp)) {
                                     Text("引用内容", style = MaterialTheme.typography.labelLarge)
                                     Text(
-                                        cleanDiscuzText(it.message).take(300),
+                                        cleanDiscuzText(it.rawMessage ?: it.message).take(300),
                                         style = MaterialTheme.typography.bodySmall,
                                         maxLines = 5
                                     )
