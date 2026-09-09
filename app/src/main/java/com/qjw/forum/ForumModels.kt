@@ -321,6 +321,9 @@ data class Reply(
 
     val message:String,
 
+    @SerializedName("raw_message")
+    val rawMessage:String? = null,
+
     val dateline:Long? = null,
 
     val author:Author
