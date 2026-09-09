@@ -1,5 +1,7 @@
 package com.qjw.forum
 
+import androidx.activity.compose.BackHandler
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +58,7 @@ fun ForumThreadListScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val swipeBackModifier = rememberEdgeSwipeBackModifier(onBack)
+    BackHandler(onBack = onBack)
 
     fun fetchThreads(version: String?, manual: Boolean = false) {
         scope.launch {
@@ -190,7 +193,6 @@ fun ForumThreadListScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .then(swipeBackModifier)
             .padding(horizontal = 12.dp)
     ) {
         Row(
@@ -252,7 +254,8 @@ fun ForumThreadListScreen(
                     state = listState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .widthIn(max = 600.dp),
+                        .widthIn(max = 600.dp)
+                        .then(swipeBackModifier),
                     contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     items(forumData!!.list, key = { it.tid }) { post ->
