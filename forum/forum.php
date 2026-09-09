@@ -10,6 +10,9 @@ C::app()->init();
 header('Content-Type: application/json; charset=utf-8');
 
 $fid = intval($_GET['fid'] ?? 0);
+$page = max(1, intval($_GET['page'] ?? 1));
+$pageSize = min(50, max(10, intval($_GET['page_size'] ?? 30)));
+$offset = ($page - 1) * $pageSize;
 
 if (!$fid) {
     echo json_encode(array('code' => 400, 'message' => 'fid不能为空'), JSON_UNESCAPED_UNICODE);
@@ -82,13 +85,18 @@ function forum_thread_cover($tid) {
     return '';
 }
 
+$total = intval(DB::result_first(
+    "SELECT COUNT(*) FROM pre_forum_thread WHERE fid=%d",
+    array($fid)
+));
+
 $list = DB::fetch_all(
     "SELECT tid, subject, author, views, replies, displayorder
      FROM pre_forum_thread
      WHERE fid=%d
      ORDER BY displayorder DESC, dateline DESC
-     LIMIT 50",
-    array($fid)
+     LIMIT %d, %d",
+    array($fid, $offset, $pageSize)
 );
 
 foreach ($list as &$thread) {
@@ -101,6 +109,9 @@ echo json_encode(array(
     'data' => array(
         'fid' => $forum['fid'],
         'name' => $forum['name'],
-        'list' => $list
+        'list' => $list,
+        'total' => $total,
+        'page' => $page,
+        'page_size' => $pageSize
     )
 ), JSON_UNESCAPED_UNICODE);
