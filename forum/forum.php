@@ -89,14 +89,14 @@ function forum_thread_cover($tid) {
 }
 
 $total = intval(DB::result_first(
-    "SELECT COUNT(*) FROM pre_forum_thread WHERE fid=%d",
+    "SELECT COUNT(*) FROM pre_forum_thread WHERE fid=%d AND displayorder>=0",
     array($fid)
 ));
 
 $list = DB::fetch_all(
     "SELECT tid, subject, author, views, replies, displayorder
      FROM pre_forum_thread
-     WHERE fid=%d
+     WHERE fid=%d AND displayorder>=0
      ORDER BY displayorder DESC, dateline DESC
      LIMIT %d, %d",
     array($fid, $offset, $pageSize)
