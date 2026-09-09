@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.consume
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.runtime.rememberUpdatedState
@@ -291,7 +290,6 @@ private fun rememberEdgeSwipeBackModifier(onBack: () -> Unit): Modifier {
             onHorizontalDrag = { change, dragAmount ->
                 if (startedAtEdge && dragAmount > 0f) {
                     movedRight += dragAmount
-                    change.consume()
                 }
             },
             onDragEnd = {
