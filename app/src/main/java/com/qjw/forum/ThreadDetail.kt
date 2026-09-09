@@ -93,6 +93,15 @@ fun cleanDiscuzText(text:String):String{
             ""
         )
 
+        .replace(
+            Regex("\\[quote(?:=[^\\]]*)?\\]", RegexOption.IGNORE_CASE),
+            "引用：\\n"
+        )
+        .replace(
+            Regex("\\[/quote\\]", RegexOption.IGNORE_CASE),
+            "\\n"
+        )
+
         .trim()
 
 }
@@ -165,6 +174,7 @@ fun ThreadDetail(
 
     var deleteReplyPid by remember { mutableStateOf<String?>(null) }
     var deletingReply by remember { mutableStateOf(false) }
+    var replyTarget by remember { mutableStateOf<Reply?>(null) }
 
 
 
@@ -682,6 +692,34 @@ fun ThreadDetail(
 
 
 
+                            replyTarget?.let { target ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("回复 @${target.author.username}", fontWeight = FontWeight.Bold)
+                                            Text(
+                                                cleanDiscuzText(target.message).take(80),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                maxLines = 2
+                                            )
+                                        }
+                                        TextButton(onClick = { replyTarget = null }) {
+                                            Text("取消")
+                                        }
+                                    }
+                                }
+                            }
+
                             OutlinedTextField(
 
                                 value =
@@ -695,7 +733,10 @@ fun ThreadDetail(
 
                                 label = {
 
-                                    Text("输入回复")
+                                    Text(
+                                        if (replyTarget == null) "输入回复"
+                                        else "回复 @${replyTarget?.author?.username}"
+                                    )
 
                                 },
 
@@ -744,7 +785,15 @@ fun ThreadDetail(
 
                                                     tid,
 
-                                                    replyText
+                                                    replyTarget?.let { target ->
+                                                        val quoteAuthor = target.author.username
+                                                            .replace("[", "")
+                                                            .replace("]", "")
+                                                        val quoteBody = cleanDiscuzText(target.message)
+                                                            .take(300)
+                                                        "[quote=$quoteAuthor]$quoteBody[/quote]\\n" +
+                                                            "回复 @$quoteAuthor：${replyText.trim()}"
+                                                    } ?: replyText.trim()
 
                                                 )
 
@@ -909,14 +958,25 @@ fun ThreadDetail(
 
                                     )
 
-                                    if (reply.author.uid.toString() == UserStore.getUid().toString()) {
+                                    Row {
                                         TextButton(
-                                            onClick = { deleteReplyPid = reply.pid.toString() }
+                                            onClick = {
+                                                replyTarget = reply
+                                                replyMsg = ""
+                                            }
                                         ) {
-                                            Text(
-                                                text = "删除回复",
-                                                color = MaterialTheme.colorScheme.error
-                                            )
+                                            Text("回复并引用")
+                                        }
+
+                                        if (reply.author.uid.toString() == UserStore.getUid().toString()) {
+                                            TextButton(
+                                                onClick = { deleteReplyPid = reply.pid.toString() }
+                                            ) {
+                                                Text(
+                                                    text = "删除回复",
+                                                    color = MaterialTheme.colorScheme.error
+                                                )
+                                            }
                                         }
                                     }
 
