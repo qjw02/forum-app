@@ -131,11 +131,10 @@ interface ApiService {
 
     @GET("api/forum/forum.php")
     suspend fun getForumThreads(
-
-        @Query("fid")
-        fid:String
-
-    ):ForumThreadResponse
+        @Query("fid") fid: String,
+        @Query("page") page: Int = 1,
+        @Query("page_size") pageSize: Int = 30
+    ): ForumThreadResponse
 
 
 
