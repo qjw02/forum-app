@@ -1011,34 +1011,21 @@ fun ThreadDetail(
 private fun rememberThreadEdgeSwipeBackModifier(onBack: () -> Unit): Modifier {
     val density = LocalDensity.current
     val latestOnBack by rememberUpdatedState(onBack)
-    val edgeWidth = with(density) { 32.dp.toPx() }
-    val triggerDistance = with(density) { 96.dp.toPx() }
+    val triggerDistance = with(density) { 72.dp.toPx() }
 
-    return Modifier.pointerInput(edgeWidth, triggerDistance) {
-        var startedAtEdge = false
+    return Modifier.pointerInput(triggerDistance) {
         var movedRight = 0f
 
         detectHorizontalDragGestures(
-            onDragStart = { offset ->
-                startedAtEdge = offset.x <= edgeWidth
-                movedRight = 0f
-            },
-            onHorizontalDrag = { change, dragAmount ->
-                if (startedAtEdge && dragAmount > 0f) {
-                    movedRight += dragAmount
-                }
+            onDragStart = { movedRight = 0f },
+            onHorizontalDrag = { _, dragAmount ->
+                if (dragAmount > 0f) movedRight += dragAmount
             },
             onDragEnd = {
-                if (startedAtEdge && movedRight >= triggerDistance) {
-                    latestOnBack()
-                }
-                startedAtEdge = false
+                if (movedRight >= triggerDistance) latestOnBack()
                 movedRight = 0f
             },
-            onDragCancel = {
-                startedAtEdge = false
-                movedRight = 0f
-            }
+            onDragCancel = { movedRight = 0f }
         )
     }
 }
