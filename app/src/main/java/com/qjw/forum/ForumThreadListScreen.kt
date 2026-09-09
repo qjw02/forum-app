@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +53,7 @@ fun ForumThreadListScreen(
     var loadingMore by remember(fid) { mutableStateOf(false) }
     var currentPage by remember(fid) { mutableStateOf(cachedForum?.data?.page ?: 1) }
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     val swipeBackModifier = rememberEdgeSwipeBackModifier(onBack)
 
     fun fetchThreads(version: String?, manual: Boolean = false) {
@@ -172,6 +175,17 @@ fun ForumThreadListScreen(
         }
     }
 
+    LaunchedEffect(listState, forumData?.list?.size, forumData?.total) {
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+        }.collect { lastVisible ->
+            val current = forumData
+            if (current != null && lastVisible >= current.list.lastIndex - 2) {
+                loadMoreThreads()
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -234,6 +248,7 @@ fun ForumThreadListScreen(
                 Spacer(Modifier.height(10.dp))
 
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxSize()
                         .widthIn(max = 600.dp),
@@ -275,34 +290,21 @@ fun ForumThreadListScreen(
 private fun rememberEdgeSwipeBackModifier(onBack: () -> Unit): Modifier {
     val density = LocalDensity.current
     val latestOnBack by rememberUpdatedState(onBack)
-    val edgeWidth = with(density) { 32.dp.toPx() }
-    val triggerDistance = with(density) { 96.dp.toPx() }
+    val triggerDistance = with(density) { 72.dp.toPx() }
 
-    return Modifier.pointerInput(edgeWidth, triggerDistance) {
-        var startedAtEdge = false
+    return Modifier.pointerInput(triggerDistance) {
         var movedRight = 0f
 
         detectHorizontalDragGestures(
-            onDragStart = { offset ->
-                startedAtEdge = offset.x <= edgeWidth
-                movedRight = 0f
-            },
-            onHorizontalDrag = { change, dragAmount ->
-                if (startedAtEdge && dragAmount > 0f) {
-                    movedRight += dragAmount
-                }
+            onDragStart = { movedRight = 0f },
+            onHorizontalDrag = { _, dragAmount ->
+                if (dragAmount > 0f) movedRight += dragAmount
             },
             onDragEnd = {
-                if (startedAtEdge && movedRight >= triggerDistance) {
-                    latestOnBack()
-                }
-                startedAtEdge = false
+                if (movedRight >= triggerDistance) latestOnBack()
                 movedRight = 0f
             },
-            onDragCancel = {
-                startedAtEdge = false
-                movedRight = 0f
-            }
+            onDragCancel = { movedRight = 0f }
         )
     }
 }
