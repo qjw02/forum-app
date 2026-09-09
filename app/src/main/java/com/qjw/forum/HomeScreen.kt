@@ -80,7 +80,13 @@ fun HomeScreen(
     onOpenForum: (String) -> Unit
 ) {
     val cachedHome = remember { ContentCache.getHome() }
-    var homeData by remember { mutableStateOf(cachedHome?.data) }
+    fun visiblePosts(posts: List<Post>?) = posts.orEmpty().filter { (it.displayorder ?: 0) >= 0 }
+    fun visibleHome(data: HomeData) = data.copy(
+        hot = visiblePosts(data.hot),
+        new = visiblePosts(data.new)
+    )
+
+    var homeData by remember { mutableStateOf(cachedHome?.data?.let(::visibleHome)) }
     var loading by remember { mutableStateOf(cachedHome == null) }
     var errorText by remember { mutableStateOf("") }
     var showSearch by remember { mutableStateOf(false) }
@@ -100,11 +106,12 @@ fun HomeScreen(
             try {
                 val result = ApiClient.api.getHomeIndex()
                 if (result.code == 0 && result.data != null) {
-                    homeData = result.data
-                    PostCache.save(result.data.new.orEmpty())
+                    val visibleData = visibleHome(result.data)
+                    homeData = visibleData
+                    PostCache.save(visibleData.new.orEmpty())
                     ContentCache.saveHome(
                         version ?: cachedHome?.version ?: "manual",
-                        result.data
+                        visibleData
                     )
                 } else {
                     errorText = result.message ?: "加载失败"
@@ -129,7 +136,7 @@ fun HomeScreen(
             try {
                 val result = ApiClient.api.searchThreads(keyword.trim())
                 if (result.code == 0) {
-                    searchResults = result.data.orEmpty()
+                    searchResults = visiblePosts(result.data)
                     if (searchResults.isEmpty()) searchMessage = "没有找到相关主题"
                 } else {
                     searchMessage = result.message ?: "搜索失败"
@@ -231,7 +238,7 @@ fun HomeScreen(
                 }
 
                 itemsIndexed(
-                    items = homeData?.hot.orEmpty(),
+                    items = visiblePosts(homeData?.hot),
                     key = { index, post -> "hot_${post.tid}_$index" }
                 ) { _, post ->
                     PostCard(post = post, onClick = onOpenThread)
@@ -246,7 +253,7 @@ fun HomeScreen(
                 }
 
                 itemsIndexed(
-                    items = homeData?.new.orEmpty(),
+                    items = visiblePosts(homeData?.new),
                     key = { index, post -> "new_${post.tid}_$index" }
                 ) { _, post ->
                     PostCard(post = post, onClick = onOpenThread)
