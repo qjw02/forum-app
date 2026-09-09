@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.consume
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -1027,7 +1026,6 @@ private fun rememberThreadEdgeSwipeBackModifier(onBack: () -> Unit): Modifier {
             onHorizontalDrag = { change, dragAmount ->
                 if (startedAtEdge && dragAmount > 0f) {
                     movedRight += dragAmount
-                    change.consume()
                 }
             },
             onDragEnd = {
