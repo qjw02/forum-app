@@ -388,13 +388,12 @@ data class ForumThreadResponse(
 
 
 data class ForumThreadData(
-
-    val fid:String,
-
-    val name:String,
-
-    val list:List<Post>
-
+    val fid: String,
+    val name: String,
+    val list: List<Post>,
+    val total: Int = 0,
+    val page: Int = 1,
+    val page_size: Int = 30
 )
 
 
