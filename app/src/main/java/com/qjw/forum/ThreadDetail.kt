@@ -93,20 +93,29 @@ fun cleanDiscuzText(text:String):String{
             ""
         )
 
-        .replace(
-            Regex("\\[quote(?:=[^\\]]*)?\\]", RegexOption.IGNORE_CASE),
-            "引用：\\n"
-        )
-        .replace(
-            Regex("\\[/quote\\]", RegexOption.IGNORE_CASE),
-            "\\n"
-        )
-
         .trim()
 
 }
 
+private data class ParsedReplyQuote(
+    val author: String?,
+    val quotedText: String,
+    val replyText: String
+)
 
+private val replyQuoteRegex = Regex(
+    """\\[quote(?:=([^\\]]+))?\\]([\\s\\S]*?)\\[/quote\\]""",
+    RegexOption.IGNORE_CASE
+)
+
+private fun splitReplyQuote(raw: String): ParsedReplyQuote? {
+    val match = replyQuoteRegex.find(raw) ?: return null
+    return ParsedReplyQuote(
+        author = match.groupValues[1].trim().ifBlank { null },
+        quotedText = match.groupValues[2].trim(),
+        replyText = raw.removeRange(match.range).trim()
+    )
+}
 
 
 @Composable
@@ -175,6 +184,8 @@ fun ThreadDetail(
     var deleteReplyPid by remember { mutableStateOf<String?>(null) }
     var deletingReply by remember { mutableStateOf(false) }
     var replyTarget by remember { mutableStateOf<Reply?>(null) }
+    var showReplyDialog by remember { mutableStateOf(false) }
+    var sendingReply by remember { mutableStateOf(false) }
 
 
 
@@ -956,19 +967,43 @@ fun ThreadDetail(
                                         )
                                     }
 
+                                    val parsedQuote = splitReplyQuote(reply.message)
+                                    parsedQuote?.let { quote ->
+                                        Card(
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 8.dp, bottom = 6.dp)
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Text(
+                                                    text = "引用${quote.author?.let { " @$it" } ?: ""}",
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(Modifier.height(4.dp))
+                                                Text(
+                                                    text = cleanDiscuzText(quote.quotedText),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    maxLines = 4
+                                                )
+                                            }
+                                        }
+                                    }
+
                                     Text(
-
-                                        cleanDiscuzText(
-                                            reply.message
-                                        )
-
+                                        cleanDiscuzText(parsedQuote?.replyText ?: reply.message)
                                     )
 
                                     Row {
                                         TextButton(
                                             onClick = {
                                                 replyTarget = reply
+                                                replyText = ""
                                                 replyMsg = ""
+                                                showReplyDialog = true
                                             }
                                         ) {
                                             Text("回复并引用")
@@ -1029,6 +1064,114 @@ fun ThreadDetail(
 
 
 
+        }
+
+        if (showReplyDialog) {
+            val target = replyTarget
+            AlertDialog(
+                onDismissRequest = {
+                    if (!sendingReply) {
+                        showReplyDialog = false
+                        replyTarget = null
+                    }
+                },
+                title = {
+                    Text(if (target == null) "发表回复" else "回复 @${target.author.username}")
+                },
+                text = {
+                    Column {
+                        target?.let {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Text("引用内容", style = MaterialTheme.typography.labelLarge)
+                                    Text(
+                                        cleanDiscuzText(it.message).take(300),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 5
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(10.dp))
+                        }
+                        OutlinedTextField(
+                            value = replyText,
+                            onValueChange = { replyText = it },
+                            label = { Text("输入回复内容") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3
+                        )
+                        if (replyMsg.isNotBlank()) {
+                            Text(
+                                replyMsg,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        enabled = !sendingReply,
+                        onClick = {
+                            if (!UserStore.isLogin()) {
+                                onLogin()
+                                return@Button
+                            }
+                            if (replyText.trim().isBlank()) {
+                                replyMsg = "请输入回复内容"
+                                return@Button
+                            }
+                            scope.launch {
+                                sendingReply = true
+                                try {
+                                    val payload = target?.let {
+                                        val quoteAuthor = it.author.username
+                                            .replace("[", "")
+                                            .replace("]", "")
+                                        val quoteBody = cleanDiscuzText(it.message).take(300)
+                                        "[quote=$quoteAuthor]$quoteBody[/quote]\n" +
+                                            "回复 @$quoteAuthor：${replyText.trim()}"
+                                    } ?: replyText.trim()
+                                    val result = ApiClient.api.reply(tid, payload)
+                                    replyMsg = result.message ?: ""
+                                    if (result.code == 0) {
+                                        ProfileCache.clear()
+                                        PostCache.clear()
+                                        replyText = ""
+                                        replyTarget = null
+                                        showReplyDialog = false
+                                        val refresh = ApiClient.api.getThread(tid)
+                                        if (refresh.code == 0) {
+                                            data = refresh.data
+                                            refresh.data?.let { ContentCache.saveThread(tid, it) }
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    replyMsg = e.message ?: "回复失败"
+                                } finally {
+                                    sendingReply = false
+                                }
+                            }
+                        }
+                    ) {
+                        Text(if (sendingReply) "发送中…" else "发送回复")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        enabled = !sendingReply,
+                        onClick = {
+                            showReplyDialog = false
+                            replyTarget = null
+                        }
+                    ) { Text("取消") }
+                }
+            )
         }
 
         deleteReplyPid?.let { pid ->
