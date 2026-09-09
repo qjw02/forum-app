@@ -104,7 +104,7 @@ private data class ParsedReplyQuote(
 )
 
 private val replyQuoteRegex = Regex(
-    """\\[quote(?:=([^\\]]+))?\\]([\\s\\S]*?)\\[/quote\\]""",
+    """\[quote(?:=([^\]]+))?\]([\s\S]*?)\[/quote\]""",
     RegexOption.IGNORE_CASE
 )
 
