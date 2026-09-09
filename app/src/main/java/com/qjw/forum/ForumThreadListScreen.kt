@@ -26,6 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.consume
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.qjw.forum.component.PostCard
 import kotlinx.coroutines.launch
@@ -45,6 +50,7 @@ fun ForumThreadListScreen(
     var permissionNote by remember(fid) { mutableStateOf("") }
     var refreshing by remember(fid) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val swipeBackModifier = rememberEdgeSwipeBackModifier(onBack)
 
     fun fetchThreads(version: String?, manual: Boolean = false) {
         scope.launch {
@@ -139,6 +145,7 @@ fun ForumThreadListScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .then(swipeBackModifier)
             .padding(horizontal = 12.dp)
     ) {
         Row(
@@ -203,10 +210,52 @@ fun ForumThreadListScreen(
                     contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     items(forumData!!.list, key = { it.tid }) { post ->
-                        PostCard(post = post, onClick = onOpenThread)
+                        PostCard(
+                            post = post,
+                            onClick = onOpenThread,
+                            titleMaxLines = Int.MAX_VALUE
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+
+@Composable
+private fun rememberEdgeSwipeBackModifier(onBack: () -> Unit): Modifier {
+    val density = LocalDensity.current
+    val latestOnBack by rememberUpdatedState(onBack)
+    val edgeWidth = with(density) { 32.dp.toPx() }
+    val triggerDistance = with(density) { 96.dp.toPx() }
+
+    return Modifier.pointerInput(edgeWidth, triggerDistance) {
+        var startedAtEdge = false
+        var movedRight = 0f
+
+        detectHorizontalDragGestures(
+            onDragStart = { offset ->
+                startedAtEdge = offset.x <= edgeWidth
+                movedRight = 0f
+            },
+            onHorizontalDrag = { change, dragAmount ->
+                if (startedAtEdge && dragAmount > 0f) {
+                    movedRight += dragAmount
+                    change.consume()
+                }
+            },
+            onDragEnd = {
+                if (startedAtEdge && movedRight >= triggerDistance) {
+                    latestOnBack()
+                }
+                startedAtEdge = false
+                movedRight = 0f
+            },
+            onDragCancel = {
+                startedAtEdge = false
+                movedRight = 0f
+            }
+        )
     }
 }
