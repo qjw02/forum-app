@@ -124,8 +124,9 @@ private fun splitReplyQuote(raw: String): ParsedReplyQuote? {
         ?.trim()
         ?.takeIf { it.isNotBlank() }
 
+    val tagAuthor = match.groupValues[1].trim()
     return ParsedReplyQuote(
-        author = match.groupValues[1].trim().ifBlank { inlineAuthor },
+        author = tagAuthor.takeIf { it.isNotBlank() } ?: inlineAuthor,
         quotedText = quotedText,
         replyText = raw.removeRange(match.range).trim()
     )
